@@ -3,10 +3,10 @@ module.exports = {
     name: "spy",
     version: "1.0",
     author: "MR᭄﹅ MAHABUB﹅ メꪜ",
-    countDown: 60,
+    countDown: 10,
     role: 2,
-    shortDescription: "Get user information and Profile Picture",
-    longDescription: "Get user information and Profile Picture by mentioning",
+    shortDescription: "Get user information and Profile Photo",
+    longDescription: "Get user information and Profile Photo by mentioning",
     category: "information",
   },
 
@@ -54,12 +54,12 @@ module.exports = {
           genderText = "Unknown";
       }
 
-      // Construct and send the user's information with avatar
+      // Construct and send the user's information with Profile Photo
       const userInformation = `❏ Name: ${userInfo[uid].name}\n❏ Profile URL: ${userInfo[uid].profileUrl}\n❏ Gender: ${genderText}\n❏ User Type: ${userInfo[uid].type}\n❏ Is Friend: ${userInfo[uid].isFriend ? "Yes" : "No"}\n❏ Is Birthday today: ${userInfo[uid].isBirthday ? "Yes" : "No"}`;
 
       message.reply({
         body: userInformation,
-        attachment: await global.utils.getStreamFromURL(avatarUrl)
+        attachment: await global.utils.getStreamFromURL(avatarUrl),
       });
     });
   }
