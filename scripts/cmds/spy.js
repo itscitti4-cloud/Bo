@@ -5,8 +5,8 @@ module.exports = {
     author: "MR᭄﹅ MAHABUB﹅ メꪜ",
     countDown: 10,
     role: 2,
-    shortDescription: "Get user information and profile avatar",
-    longDescription: "Get user information and profile avatar by mentioning",
+    shortDescription: "Get user information and avatar",
+    longDescription: "Get user information and avatar by mentioning",
     category: "image",
   },
 
