@@ -26,7 +26,7 @@ module.exports = {
     },
 
     sendInfo: async function (message) {
-        message.reply("𝑾𝒂𝒊𝒕 𝒃𝒂𝒃𝒚... 𝑳𝒐𝒂𝒅𝒊𝒏𝒈 𝒂𝒖𝒕𝒉𝒐𝒓 𝒊𝒏𝒇𝒐 😘").then(async (waitMsg) => {
+        message.reply("Please wait😘").then(async (waitMsg) => {
             setTimeout(() => {
                 message.unsend(waitMsg.messageID);
             }, 4000);
@@ -48,23 +48,8 @@ module.exports = {
             const hours = Math.floor((uptime / (60 * 60)) % 24);
             const days = Math.floor(uptime / (60 * 60 * 24));
             const uptimeString = `${days}d ${hours}h ${minutes}m ${seconds}s`.replace(/^0d 0h /, "");
-
-            try {
-                const videoResponse = await axios.get("https://mahabub-apis.vercel.app/info");
-                if (!videoResponse.data || !videoResponse.data.data) {
-                    throw new Error("Invalid video API response.");
-                }
-
-                let videoUrl = videoResponse.data.data;
-
-                if (videoUrl.includes("drive.google.com")) {
-                    const match = videoUrl.match(/[-\w]{25,}/);
-                    if (match) {
-                        videoUrl = `https://drive.google.com/uc?id=${match[0]}`;
-                    }
-                }
-
-                message.reply({
+            
+            message.reply({
                     body:
 `╭─╼━━━[ 🌟 𝑩𝑶𝑻 & 𝑨𝑼𝑻𝑯𝑶𝑹 𝑰𝑵𝑭𝑶 🌟 ]━━━╾─╮
 ┃
@@ -81,12 +66,11 @@ module.exports = {
 ┃ 📸 𝑰𝒏𝒔𝒕𝒂: ${authorInsta}
 ┃
 ╰─╼━━━━━━━━━━━━━━━━━━━━━━━━━━━━╾─╯`,
-                    attachment: await global.utils.getStreamFromURL(videoUrl)
-                });
+                    
 
             } catch (error) {
-                console.error("Error fetching :", error);
-                message.reply("❌ 𝑬𝒓𝒓𝒐𝒓 𝒇𝒆𝒕𝒄𝒉𝒊𝒏𝒈 𝒗𝒊𝒅𝒆𝒐. 𝑷𝒍𝒆𝒂𝒔𝒆 𝒕𝒓𝒚 𝒂𝒈𝒂𝒊𝒏 𝒍𝒂𝒕𝒆𝒓.");
+                console.error(error);
+                message.reply("Please wait");
             }
         });
     }
