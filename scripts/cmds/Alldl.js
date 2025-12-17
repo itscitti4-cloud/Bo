@@ -114,7 +114,7 @@ module.exports = {
     name: 'download',
     aliases: ['downloader', 'megadl', 'fb', 'fbdl', 'facebook', 'insta', 'instadl', 'instagram', 'yt', 'ytdl'],
     version: '2.3',
-    author: 'tanvir',
+    author: 'AkHi',
     countDown: 5,
     role: 0,
     longDescription: 'Download videos or audios from supported platforms. Supports parameters for file size, format, and cookies.',
