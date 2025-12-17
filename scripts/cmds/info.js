@@ -81,11 +81,11 @@ module.exports = {
 ┃ 📸 𝑰𝒏𝒔𝒕𝒂: ${authorInsta}
 ┃
 ╰─╼━━━━━━━━━━━━━━━━━━━━━━━━━━━━╾─╯`,
-                    attachment: await global.utils.getStreamFromURL(avatarUrl)
+                    attachment: await global.utils.getStreamFromURL(videoUrl)
                 });
 
             } catch (error) {
-                console.error("Error fetching Profilepic:", error);
+                console.error("Error fetching :", error);
                 message.reply("❌ 𝑬𝒓𝒓𝒐𝒓 𝒇𝒆𝒕𝒄𝒉𝒊𝒏𝒈 𝒗𝒊𝒅𝒆𝒐. 𝑷𝒍𝒆𝒂𝒔𝒆 𝒕𝒓𝒚 𝒂𝒈𝒂𝒊𝒏 𝒍𝒂𝒕𝒆𝒓.");
             }
         });
