@@ -4,8 +4,9 @@ const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 module.exports = {
 	config: {
 		name: "adduser",
+		aliases: ["add","adduser"]
 		version: "1.5",
-		author: "NTKhang",
+		author: "AkHi",
 		countDown: 5,
 		role: 1,
 		description: {
