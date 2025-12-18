@@ -2,10 +2,10 @@ const moment = require("moment-timezone");
 
 module.exports = {
   config: {
-    name: "accept",
-    aliases: ["acp"],
-    version: "1.0",
-    author: "AkHi",
+    name: "friendrequest",
+    aliases: ["acp", "accept"],
+    version: "1.1",
+    author: "BaYjid (Fixed by MR᭄﹅ MAHABUB﹅ メꪜ)",
     countDown: 8,
     role: 2,
     shortDescription: "Accept or delete friend requests",
