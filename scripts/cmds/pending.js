@@ -49,7 +49,7 @@ module.exports = {
 
       try {
         await api.sendMessage(
-          `✓ Group approved! Type ${prefix}help to see available commands.`,
+          `✓ Group approved by Lubna Jannat! Type ${prefix}help to see available commands.`,
           group.threadID
         );
 
