@@ -4,9 +4,9 @@ module.exports = {
         config: {
                 name: "backupdata",
                 version: "1.4",
-                author: "NTKhang",
+                author: "AkHi",
                 countDown: 5,
-                role: 4,
+                role: 2,
                 description: {
                         vi: "Sao lưu dữ liệu của bot (threads, users, dashboard, globalData)",
                         en: "Backup data of bot (threads, users, dashboard, globalData)"
