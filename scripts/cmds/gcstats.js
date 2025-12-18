@@ -13,12 +13,12 @@ module.exports = {
  countDown: 5,
  role: 2,
  shortDescription: {
- en: "🖼️ Group image summary"
+ en: "🖼️ Group information summary"
  },
  longDescription: {
- en: "🖼️ Group image with admins, actives, top senders & members"
+ en: "🖼️ Group information with admins, actives, top senders & members"
  },
- category: "𝗜𝗠𝗔𝗚𝗘",
+ category: "𝗜INFORMATION",
  guide: {
  en: "{p}{n} --colour [text] --bgcolour [imgURL] --admincolour [clr] --membercolour [clr]"
  },
