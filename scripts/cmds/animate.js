@@ -13,7 +13,7 @@ module.exports = {
     name: "animate",
     aliases: ["anim", "video", "genvid"],
     version: "1.0",
-    author: "Neoaz ゐ",
+    author: "AkHi",
     countDown: 30,
     role: 0,
     longDescription: "Generate animated videos from text prompts using AI.",
