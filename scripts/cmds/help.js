@@ -1,29 +1,24 @@
 const fs = require("fs-extra");
-const axios = require("axios");
 const path = require("path");
-const { getPrefix } = global.utils;
-const { commands, aliases } = global.GoatBot;
-const doNotDelete = "[ 🐐 | Goat Bot V2 ]";
 
 module.exports = {
 	config: {
 		name: "help",
-		version: "1.21",
+		aliases: ["menu", "commands"],
+		version: "4.8",
 		author: "AkHi",
-		countDown: 5,
-		role: 0,
-		description: {
-			"View command usage"
-		},
-		category: "info",
-		guide: {
+		shortDescription: "Show all available commands",
+		longDescription: "Displays a clean and premium-styled categorized list of commands.",
+		category: "system",
+		guide: "{pn}help [command name]"
+	},
+
 			 "{pn} [empty | <page number> | <command name>]"
 				+ "\n   {pn} <command name> [-u | usage | -g | guide]: only show command usage"
 				+ "\n   {pn} <command name> [-i | info]: only show command info"
 				+ "\n   {pn} <command name> [-r | role]: only show command role"
 				+ "\n   {pn} <command name> [-a | alias]: only show command alias"
-		},
-		priority: 1
+	
 	},
 
 	langs: {
@@ -86,251 +81,92 @@ module.exports = {
 			roleText0setRole: "0 (set role, all users)",
 			roleText1setRole: "1 (set role, group administrators)",
 			pageNotFound: "Page %1 does not exist"
-		}
-	},
+	onStart: async function ({ message, args, prefix }) {
+		const allCommands = global.GoatBot.commands;
+		const categories = {};
 
-	onStart: async function ({ message, args, event, threadsData, getLang, role, globalData }) {
-		const langCode = await threadsData.get(event.threadID, "data.lang") || global.GoatBot.config.language;
-		let customLang = {};
-		const pathCustomLang = path.normalize(`${process.cwd()}/languages/cmds/${langCode}.js`);
-		if (fs.existsSync(pathCustomLang))
-			customLang = require(pathCustomLang);
-
-		const { threadID } = event;
-		const threadData = await threadsData.get(threadID);
-		const prefix = getPrefix(threadID);
-		let sortHelp = threadData.settings.sortHelp || "name";
-		if (!["category", "name"].includes(sortHelp))
-			sortHelp = "name";
-		const commandName = (args[0] || "").toLowerCase();
-		let command = commands.get(commandName) || commands.get(aliases.get(commandName));
-		const aliasesData = threadData.data.aliases || {
-			// uid: ["userid", "id"]
+		const emojiMap = {
+			ai: "➥", "ai-image": "➥", group: "➥", system: "➥",
+			fun: "➥", owner: "➥", config: "➥", economy: "➥",
+			media: "➥", "18+": "➥", tools: "➥", utility: "➥",
+			info: "➥", image: "➥", game: "➥", admin: "➥",
+			rank: "➥", boxchat: "➥", others: "➥"
 		};
-		if (!command) {
-			for (const cmdName in aliasesData) {
-				if (aliasesData[cmdName].includes(commandName)) {
-					command = commands.get(cmdName);
-					break;
-				}
-			}
+
+		const cleanCategoryName = (text) => {
+			if (!text) return "others";
+			return text
+				.normalize("NFKD")
+				.replace(/[^\w\s-]/g, "")
+				.replace(/\s+/g, " ")
+				.trim()
+				.toLowerCase();
+		};
+
+		for (const [name, cmd] of allCommands) {
+			const cat = cleanCategoryName(cmd.config.category);
+			if (!categories[cat]) categories[cat] = [];
+			categories[cat].push(cmd.config.name);
 		}
 
-		if (!command) {
-			const globalAliasesData = await globalData.get('setalias', 'data', []);
-			// [{
-			// 	commandName: "uid",
-			// 	aliases: ["uid", "id]
-			// }]
-			for (const item of globalAliasesData) {
-				if (item.aliases.includes(commandName)) {
-					command = commands.get(item.commandName);
-					break;
-				}
-			}
+
+		if (args[0]) {
+			const query = args[0].toLowerCase();
+			const cmd =
+				allCommands.get(query) ||
+				[...allCommands.values()].find((c) => (c.config.aliases || []).includes(query));
+			if (!cmd) return message.reply(`❌ Command "${query}" not found.`);
+
+			const {
+				name,
+				version,
+				author,
+				guide,
+				category,
+				shortDescription,
+				longDescription,
+				aliases,
+				role 
+			} = cmd.config;
+
+			const desc =
+				typeof longDescription === "string"
+					? longDescription
+					: longDescription?.en || shortDescription?.en || shortDescription || "No description";
+
+			const usage =
+				typeof guide === "string"
+					? guide.replace(/{pn}/g, prefix)
+					: guide?.en?.replace(/{pn}/g, prefix) || `${prefix}${name}`;
+
+						const requiredRole = cmd.config.role !== undefined ? cmd.config.role : 0; 
+
+			return message.reply(
+				`☠️ 𝗖𝗢𝗠𝗠𝗔𝗡𝗗 𝗜𝗡𝗙𝗢 ☠️\n\n` +
+				`➥ Name: ${name}\n` +
+				`➥ Category: ${category || "Uncategorized"}\n` +
+				`➥ Description: ${desc}\n` +
+				`➥ Aliases: ${aliases?.length ? aliases.join(", ") : "None"}\n` +
+				`➥ Usage: ${usage}\n` +
+				`➥ Permission: ${requiredRole}\n` + 
+				`➥ Author: ${author}\n` +
+				`➥ Version: ${version}`
+			);
 		}
 
-		// ———————————————— LIST ALL COMMAND ——————————————— //
-		if (!command && !args[0] || !isNaN(args[0])) {
-			const arrayInfo = [];
-			let msg = "";
-			if (sortHelp == "name") {
-				const page = parseInt(args[0]) || 1;
-				const numberOfOnePage = 30;
-				for (const [name, value] of commands) {
-					if (value.config.role > 1 && role < value.config.role)
-						continue;
-					let describe = name;
-					let description;
-					const descriptionCustomLang = customLang[name]?.description;
-					if (descriptionCustomLang != undefined)
-						description = checkLangObject(descriptionCustomLang, langCode);
-					else if (value.config.description)
-						description = checkLangObject(value.config.description, langCode);
-					if (description)
-						describe += `: ${cropContent(description.charAt(0).toUpperCase() + description.slice(1), 50)}`;
-					arrayInfo.push({
-						data: describe,
-						priority: value.priority || 0
-					});
-				}
+		const formatCommands = (cmds) =>
+			cmds.sort().map((cmd) => `× ${cmd}`);
 
-				arrayInfo.sort((a, b) => a.data - b.data); // sort by name
-				arrayInfo.sort((a, b) => a.priority > b.priority ? -1 : 1); // sort by priority
-				const { allPage, totalPage } = global.utils.splitPage(arrayInfo, numberOfOnePage);
-				if (page < 1 || page > totalPage)
-					return message.reply(getLang("pageNotFound", page));
-
-				const returnArray = allPage[page - 1] || [];
-				const startNumber = (page - 1) * numberOfOnePage + 1;
-				msg += (returnArray || []).reduce((text, item, index) => text += `│ ${index + startNumber}${index + startNumber < 10 ? " " : ""}. ${item.data}\n`, '').slice(0, -1);
-				await message.reply(getLang("help", msg, page, totalPage, commands.size, prefix, doNotDelete));
-			}
-			else if (sortHelp == "category") {
-				for (const [, value] of commands) {
-					if (value.config.role > 1 && role < value.config.role)
-						continue; // if role of command > role of user => skip
-					const indexCategory = arrayInfo.findIndex(item => (item.category || "NO CATEGORY") == (value.config.category?.toLowerCase() || "NO CATEGORY"));
-
-					if (indexCategory != -1)
-						arrayInfo[indexCategory].names.push(value.config.name);
-					else
-						arrayInfo.push({
-							category: value.config.category.toLowerCase(),
-							names: [value.config.name]
-						});
-				}
-				arrayInfo.sort((a, b) => (a.category < b.category ? -1 : 1));
-				arrayInfo.forEach((data, index) => {
-					const categoryUpcase = `${index == 0 ? `╭` : `├`}─── ${data.category.toUpperCase()} ${index == 0 ? "⭓" : "⭔"}`;
-					data.names = data.names.sort().map(item => item = `│ ${item}`);
-					msg += `${categoryUpcase}\n${data.names.join("\n")}\n`;
-				});
-				message.reply(getLang("help2", msg, commands.size, prefix, doNotDelete));
-			}
+		let msg = `━━━🌸 Lubna Jannat AkHi 🌸━━━\n`;
+		const sortedCategories = Object.keys(categories).sort();
+		for (const cat of sortedCategories) {
+			const emoji = emojiMap[cat] || "➥";
+			msg += `\n╭──『 ${cat.toUpperCase()} 』\n`; 
+			msg += `${formatCommands(categories[cat]).join(' ')}\n`; 
+			msg += `╰────────────◊\n`;
 		}
-		// ———————————— COMMAND DOES NOT EXIST ———————————— //
-		else if (!command && args[0]) {
-			return message.reply(getLang("commandNotFound", args[0]));
-		}
-		// ————————————————— INFO COMMAND ————————————————— //
-		else {
-			const formSendMessage = {};
-			const configCommand = command.config;
+		msg += `\n➥ Use: ${prefix}help [command name] for details\n➥Use: ${prefix}callad to talk with bot admins '_'`;
 
-			let guide = configCommand.guide?.[langCode] || configCommand.guide?.["en"];
-			if (guide == undefined)
-				guide = customLang[configCommand.name]?.guide?.[langCode] || customLang[configCommand.name]?.guide?.["en"];
-
-			guide = guide || {
-				body: ""
-			};
-			if (typeof guide == "string")
-				guide = { body: guide };
-			const guideBody = guide.body
-				.replace(/\{prefix\}|\{p\}/g, prefix)
-				.replace(/\{name\}|\{n\}/g, configCommand.name)
-				.replace(/\{pn\}/g, prefix + configCommand.name);
-
-			const aliasesString = configCommand.aliases ? configCommand.aliases.join(", ") : getLang("doNotHave");
-			const aliasesThisGroup = threadData.data.aliases ? (threadData.data.aliases[configCommand.name] || []).join(", ") : getLang("doNotHave");
-
-			let roleOfCommand = configCommand.role;
-			let roleIsSet = false;
-			if (threadData.data.setRole?.[configCommand.name]) {
-				roleOfCommand = threadData.data.setRole[configCommand.name];
-				roleIsSet = true;
-			}
-
-			const roleText = roleOfCommand == 0 ?
-				(roleIsSet ? getLang("roleText0setRole") : getLang("roleText0")) :
-				roleOfCommand == 1 ?
-					(roleIsSet ? getLang("roleText1setRole") : getLang("roleText1")) :
-					getLang("roleText2");
-
-			const author = configCommand.author;
-			const descriptionCustomLang = customLang[configCommand.name]?.description;
-			let description = checkLangObject(configCommand.description, langCode);
-			if (description == undefined)
-				if (descriptionCustomLang != undefined)
-					description = checkLangObject(descriptionCustomLang, langCode);
-				else
-					description = getLang("doNotHave");
-
-			let sendWithAttachment = false; // check subcommand need send with attachment or not
-
-			if (args[1]?.match(/^-g|guide|-u|usage$/)) {
-				formSendMessage.body = getLang("onlyUsage", guideBody.split("\n").join("\n│"));
-				sendWithAttachment = true;
-			}
-			else if (args[1]?.match(/^-a|alias|aliase|aliases$/))
-				formSendMessage.body = getLang("onlyAlias", aliasesString, aliasesThisGroup);
-			else if (args[1]?.match(/^-r|role$/))
-				formSendMessage.body = getLang("onlyRole", roleText);
-			else if (args[1]?.match(/^-i|info$/))
-				formSendMessage.body = getLang(
-					"onlyInfo",
-					configCommand.name,
-					description,
-					aliasesString,
-					aliasesThisGroup,
-					configCommand.version,
-					roleText,
-					configCommand.countDown || 1,
-					author || ""
-				);
-			else {
-				formSendMessage.body = getLang(
-					"getInfoCommand",
-					configCommand.name,
-					description,
-					aliasesString,
-					aliasesThisGroup,
-					configCommand.version,
-					roleText,
-					configCommand.countDown || 1,
-					author || "",
-					guideBody.split("\n").join("\n│")
-				);
-				sendWithAttachment = true;
-			}
-
-			if (sendWithAttachment && guide.attachment) {
-				if (typeof guide.attachment == "object" && !Array.isArray(guide.attachment)) {
-					const promises = [];
-					formSendMessage.attachment = [];
-
-					for (const keyPathFile in guide.attachment) {
-						const pathFile = path.normalize(keyPathFile);
-
-						if (!fs.existsSync(pathFile)) {
-							const cutDirPath = path.dirname(pathFile).split(path.sep);
-							for (let i = 0; i < cutDirPath.length; i++) {
-								const pathCheck = `${cutDirPath.slice(0, i + 1).join(path.sep)}${path.sep}`; // create path
-								if (!fs.existsSync(pathCheck))
-									fs.mkdirSync(pathCheck); // create folder
-							}
-							const getFilePromise = axios.get(guide.attachment[keyPathFile], { responseType: 'arraybuffer' })
-								.then(response => {
-									fs.writeFileSync(pathFile, Buffer.from(response.data));
-								});
-
-							promises.push({
-								pathFile,
-								getFilePromise
-							});
-						}
-						else {
-							promises.push({
-								pathFile,
-								getFilePromise: Promise.resolve()
-							});
-						}
-					}
-
-					await Promise.all(promises.map(item => item.getFilePromise));
-					for (const item of promises)
-						formSendMessage.attachment.push(fs.createReadStream(item.pathFile));
-				}
-			}
-
-			return message.reply(formSendMessage);
-		}
+		return message.reply(msg);
 	}
 };
-
-function checkLangObject(data, langCode) {
-	if (typeof data == "string")
-		return data;
-	if (typeof data == "object" && !Array.isArray(data))
-		return data[langCode] || data.en || undefined;
-	return undefined;
-}
-
-function cropContent(content, max) {
-	if (content.length > max) {
-		content = content.slice(0, max - 3);
-		content = content + "...";
-	}
-	return content;
-      }
