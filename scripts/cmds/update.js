@@ -7,13 +7,13 @@ module.exports = {
         config: {
                 name: "update",
                 version: "1.6",
-                author: "Chat GPT, NTKhang",
+                author: "Chat GPT, AkHi",
                 role: 4,
                 description: {
                         en: "Check for and install updates for the chatbot.",
                         vi: "Kiểm tra và cài đặt phiên bản mới nhất của chatbot trên GitHub."
                 },
-                category: "owner",
+                category: "bot",
                 guide: {
                         en: "   {pn}",
                         vi: "   {pn}"
