@@ -3,7 +3,7 @@ module.exports = {
                 name: "vip",
                 aliases: ["premium"],
                 version: "1.0",
-                author: "NeoKEX",
+                author: "AkHi",
                 countDown: 5,
                 role: 0,
                 requiredMoney: 5000,
@@ -11,7 +11,7 @@ module.exports = {
                         vi: "Lệnh VIP - yêu cầu $5000 để sử dụng",
                         en: "VIP command - requires $5000 to use"
                 },
-                category: "premium",
+                category: "Admin",
                 guide: {
                         vi: '   {pn}: Xem thông tin VIP của bạn',
                         en: '   {pn}: View your VIP information'
