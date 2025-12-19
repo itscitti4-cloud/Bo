@@ -16,7 +16,7 @@ module.exports = {
     longDescription: {
       en: "📌 Browse, search, upload, and manage your commands in the GoatStore marketplace with easy sharing cmds."
     },
-    category: "𝗠𝗮𝗿𝗸𝗲𝘁",
+    category: "App and cmdstore",
     cooldowns: 0,
   },
 
