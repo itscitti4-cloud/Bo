@@ -108,12 +108,12 @@ module.exports = {
     name: "pinterest",
     aliases: ["Pinterest", "pin"],
     version: "2.2",
-    author: "Mahi--",
+    author: "AkHi",
     countDown: 10,
     role: 0,
     shortDescription: "Search Pinterest for images",
     longDescription: "Search Pinterest for images, with canvas view for Browse.",
-    category: "Image",
+    category: "ai-Image",
     guide: {
       en: "{pn} query [-count]\n" +
         "• If count is used, it sends images directly.\n" +
