@@ -5,12 +5,12 @@ module.exports = {
     name: "seedreamv4",
     aliases: ["seedream", "sdv4", "sdv4edit"],
     version: "1.0",
-    author: "Neoaz ゐ", //API by RIFAT
+    author: "AkHi", //API by RIFAT
     countDown: 10,
     role: 0,
     shortDescription: { en: "Generate or edit image with Seedream V4" },
     longDescription: { en: "Generate or edit images using Seedream V4 AI model" },
-    category: "image",
+    category: "ai-image",
     guide: {
       en: "{pn} <prompt> - Generate image\nReply to an image with: {pn} <prompt> - Edit image"
     }
