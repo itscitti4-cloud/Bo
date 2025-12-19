@@ -3,14 +3,14 @@ module.exports = {
 		name: "grouptag",
 		aliases: ["grtag"],
 		version: "1.5",
-		author: "NTKhang",
+		author: "AkHi",
 		countDown: 5,
 		role: 0,
 		description: {
 			vi: "Tag thành viên theo nhóm",
 			en: "Tag members by group"
 		},
-		category: "info",
+		category: "Box Chat",
 		guide: {
 			vi: "   {pn} add <groupTagName> <@tags>: dùng để thêm nhóm tag mới hoặc thêm thành viên vào nhóm tag đã có"
 				+ "\n   Ví dụ:"
