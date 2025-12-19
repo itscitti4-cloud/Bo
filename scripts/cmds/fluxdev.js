@@ -5,12 +5,12 @@ module.exports = {
     name: "fluxdev",
     aliases: ["flux1d", "flux1dev"],
     version: "1.0",
-    author: "Neoaz ゐ", //API by RIFAT
+    author: "AkHi", //API by RIFAT
     countDown: 10,
     role: 0,
     shortDescription: { en: "Generate AI image with Flux 1 Dev" },
     longDescription: { en: "Generate images using Flux 1 Dev AI model" },
-    category: "image",
+    category: "ai-image",
     guide: {
       en: "{pn} <prompt>"
     }
