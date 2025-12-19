@@ -12,7 +12,7 @@ module.exports = {
     version: "1.0",
     role: 2,
     usePrefix: true,
-    credits: "Dipto",
+    credits: "AkHi",
     description: "Get user information and profile photo",
     category: "information",
     cooldowns: 10,
