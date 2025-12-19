@@ -11,11 +11,17 @@ module.exports = {
                 countDown: 5,
                 role: 0,
                 description: {
-                        "Fetch user's profile picture"
+                        vi: "Lấy ảnh đại diện của người dùng",
+                        en: "Fetch user's profile picture"
                 },
                 category: "utility",
                 guide: {
-                        '{pn}: Fetch your profile picture'
+                        vi: '   {pn}: Lấy ảnh đại diện của bạn'
+                                + '\n   {pn} <@tag>: Lấy ảnh đại diện của người được tag'
+                                + '\n   {pn} <uid>: Lấy ảnh đại diện từ UID'
+                                + '\n   {pn} <profile_link>: Lấy ảnh đại diện từ link profile'
+                                + '\n   (Hoặc reply tin nhắn của ai đó)',
+                        en: '   {pn}: Fetch your profile picture'
                                 + '\n   {pn} <@tag>: Fetch tagged user\'s profile picture'
                                 + '\n   {pn} <uid>: Fetch profile picture from UID'
                                 + '\n   {pn} <profile_link>: Fetch profile picture from profile link'
@@ -24,7 +30,14 @@ module.exports = {
         },
 
         langs: {
-                        fetching: "🔍 Please wait Fetching profile picture...",
+                vi: {
+                        fetching: "🔍 Đang lấy ảnh đại diện...",
+                        success: "✓ Ảnh đại diện của %1",
+                        error: "× Không thể lấy ảnh đại diện: %1",
+                        invalidUID: "! UID không hợp lệ"
+                },
+                en: {
+                        fetching: "🔍 Fetching profile picture...",
                         success: "✓ Profile picture of %1",
                         error: "× Could not fetch profile picture: %1",
                         invalidUID: "! Invalid UID"
