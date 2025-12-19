@@ -16,14 +16,14 @@ module.exports = {
 		name: "emojimean",
 		alias: ["em", "emojimeaning", "emojimean"],
 		version: "1.4",
-		author: "NTKhang",
+		author: "AkHi",
 		countDown: 5,
 		role: 0,
 		description: {
 			vi: "Tìm nghĩa của emoji",
 			en: "Find the meaning of emoji"
 		},
-		category: "wiki",
+		category: "Tools",
 		guide: {
 			vi: "   {pn} <emoji>: Tìm nghĩa của emoji",
 			en: "   {pn} <emoji>: Find the meaning of emoji"
