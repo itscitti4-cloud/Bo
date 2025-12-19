@@ -6,7 +6,7 @@ module.exports = {
                 author: "AkHi",
                 countDown: 5,
                 role: 0,                    // Anyone can use (no role requirement)
-                requiredMoney: 1000,        // But they need $1000 balance
+                requiredMoney: 0,        // But they need $1000 balance
                 description: {
                         vi: "Lệnh demo - yêu cầu $1000 để sử dụng (không cần role đặc biệt)",
                         en: "Demo command - requires $1000 to use (no special role needed)"
