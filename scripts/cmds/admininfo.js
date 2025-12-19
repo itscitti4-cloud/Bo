@@ -78,15 +78,17 @@ module.exports = {
     const position = userInfo[uid].type;
 
     const userInformation = `
-╭────[ 𝐔𝐒𝐄𝐑 𝐈𝐍𝐅𝐎 ]
-├‣ 𝙽𝚊𝚖𝚎: Lubna Jannat AkHi
-├‣ 𝙶𝚎𝚗𝚍𝚎𝚛: Female}
+╭────[ BOT ADMIN INFO ]
+├‣ 𝙽𝚊𝚖𝚎: Lubna Jannat
+├‣ 𝙶𝚎𝚗𝚍𝚎𝚛: Female
 ├‣ 𝚄𝙸𝙳: 61583939430347
 ├‣ 𝚄𝚜𝚎𝚛𝚗𝚊𝚖𝚎: LubnaaJannat.AkHi
 ├‣ 𝙿𝚛𝚘𝚏𝚒𝚕𝚎 𝚄𝚁𝙻: https://www.facebook.com/LubnaaJannat.AkHi
 ├‣ 𝙱𝚒𝚛𝚝𝚑𝚍𝚊𝚢: 27 October
-├‣ 𝙽𝚒𝚌𝚔𝙽𝚊𝚖𝚎: আঁখি
-├‣ Status: Married With Shahryar Sabu
+├‣ 𝙽𝚒𝚌𝚔𝙽𝚊𝚖𝚎: AkHi
+├‣ Status: Married
+├‣ Husband: Shahryar Sabu
+├‣ Weeding date: 20 February, 2025
 ├‣ Profession: Teacher
 ├‣ Study: BBA Honours 
 ├‣ Institute: University of Dhaka
