@@ -88,11 +88,12 @@ module.exports = {
 ├‣ 𝙱𝚒𝚛𝚝𝚑𝚍𝚊𝚢: ${userInfo[uid].isBirthday !== false ? userInfo[uid].isBirthday : "𝙿𝚛𝚒𝚟𝚊𝚝𝚎"}
 ├‣ 𝙽𝚒𝚌𝚔𝙽𝚊𝚖𝚎: ${userInfo[uid].alternateName || "𝙽𝚘𝚗𝚎"}
 ╰‣ 𝙵𝚛𝚒𝚎𝚗𝚍 𝚠𝚒𝚝𝚑 𝚋𝚘𝚝: ${userInfo[uid].isFriend ? "𝚈𝚎𝚜✅" : "𝙽𝚘❎"}`;
-
-    message.reply({
+const avatarStream = (await require("axios").get(avatarUrl, { responseType: "stream" })).data;
+   api.sendMessage({
       body: userInformation,
-      attachment: await global.utils.getStreamFromURL(avatarUrl),
-    });
+      
+      attachment: avatarStream,
+    }, event.threadID, event.messageID);
   },
 };
 
