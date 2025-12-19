@@ -13,7 +13,7 @@ module.exports = {
     role: 0,
     shortDescription: "KISS",
     longDescription: "Send kiss pic with merged profile pictures",
-    category: "funny",
+    category: "fun",
     guide: "{pn} @mention"
   },
 
