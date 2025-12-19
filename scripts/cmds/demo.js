@@ -11,7 +11,7 @@ module.exports = {
                         vi: "Lệnh demo - yêu cầu $1000 để sử dụng (không cần role đặc biệt)",
                         en: "Demo command - requires $1000 to use (no special role needed)"
                 },
-                category: "demo",
+                category: "bot",
                 guide: {
                         vi: '   {pn}: Xem thông tin demo về hệ thống yêu cầu tiền',
                         en: '   {pn}: View demo information about the money requirement system'
