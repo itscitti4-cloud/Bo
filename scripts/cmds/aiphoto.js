@@ -10,7 +10,7 @@ module.exports = {
     role: 0,
     shortDescription: { en: "Generate AI image with AI Photo" },
     longDescription: { en: "Generate images using AI Photo model" },
-    category: "image",
+    category: "ai-image",
     guide: {
       en: "{pn} <prompt>"
     }
