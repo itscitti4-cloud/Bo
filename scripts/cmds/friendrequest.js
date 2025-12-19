@@ -10,7 +10,7 @@ module.exports = {
     role: 2,
     shortDescription: "Accept or delete friend requests",
     longDescription: "Accept or delete Facebook friend requests",
-    category: "Utility"
+    category: "social"
   },
 
   // ================= ON START =================
