@@ -10,9 +10,9 @@ module.exports = {
   config: {
     name: "spy",
     version: "1.0",
-    role: 2,
+    hasPermission: 0,
     usePrefix: true,
-    credits: "AkHi",
+    credits: "Dipto",
     description: "Get user information and profile photo",
     category: "information",
     cooldowns: 10,
@@ -57,7 +57,7 @@ module.exports = {
     }
 
     const userInfo = await api.getUserInfo(uid);
-    const avatarUrl = `https://graph.facebook.com/${uid}/picture?width=720&height=720&access_token=6628568379%7Cc1e620fa708a1d5696fb991c1bde5662`;
+    const avatarUrl = `https://graph.facebook.com/$%7Buid%7D/picture?width=720&height=720&access_token=6628568379%7Cc1e620fa708a1d5696fb991c1bde5662`;
 
     let genderText;
     switch (userInfo[uid].gender) {
