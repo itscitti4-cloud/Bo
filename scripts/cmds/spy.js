@@ -9,13 +9,13 @@ const baseApiUrl = async () => {
 module.exports = {
   config: {
     name: "spy",
+    aliases: ["whoishe", "whoisshe", "whoami", "atake"],
     version: "1.0",
-    hasPermission: 0,
-    usePrefix: true,
-    credits: "AkHi",
-    description: "Get user information and profile photo",
+    role: 2,
+    author: "AkHi",
+    Description: "Get user information and profile photo",
     category: "information",
-    cooldowns: 10,
+    countDown: 10,
   },
 
   run: async function ({
