@@ -5,12 +5,12 @@ module.exports = {
     name: "edit",
     aliases: ["imgedit"],
     version: "2.4",
-    author: "Neoaz ゐ", //API by RIFAT
+    author: "AkHi", //API by RIFAT
     countDown: 15,
     role: 0,
     shortDescription: { en: "Edit image with Seedream V4" },
     longDescription: { en: "Edit or modify an existing image using Seedream V4 Edit AI model" },
-    category: "image",
+    category: "ai-image",
     guide: {
       en: "Reply to an image with: {pn} <prompt>"
     }
