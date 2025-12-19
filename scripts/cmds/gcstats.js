@@ -7,7 +7,7 @@ const profileSize = 42;
 module.exports = {
  config: {
  name: "gcstats",
- aliases: ["stats"],
+ aliases: ["stats", "gcst"],
  version: "1.2",
  author: "AkHi",
  countDown: 5,
@@ -16,9 +16,9 @@ module.exports = {
  en: "🖼️ Group image summary"
  },
  longDescription: {
- en: "🖼️ Group information with admins, actives, top senders & members"
+ en: "🖼️ Group image with admins, actives, top senders & members"
  },
- category: "information",
+ category: "𝗜𝗠𝗔𝗚𝗘",
  guide: {
  en: "{p}{n} --colour [text] --bgcolour [imgURL] --admincolour [clr] --membercolour [clr]"
  },
