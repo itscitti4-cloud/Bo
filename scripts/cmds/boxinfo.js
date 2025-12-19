@@ -1,6 +1,5 @@
 const fs = require("fs-extra");
 const request = require("request");
-
 module.exports = {
 config: {
     name: "groupinfo",
@@ -8,7 +7,7 @@ config: {
     version: "1.0",
     author: "AkHi",
     countDown: 5,
-    role: 2,
+    role: 0,
     shortDescription: "See Box info",
     longDescription: "",
     category: "box chat",
@@ -16,7 +15,6 @@ config: {
       en: "{p} [groupinfo|boxinfo]",
     }
   },
-
  onStart: async function ({ api, event, args }) {
   let threadInfo = await api.getThreadInfo(event.threadID);
   var memLength = threadInfo.participantIDs.length;
