@@ -1,215 +1,114 @@
-const fs = require("fs-extra");
-const { createCanvas, loadImage } = require("canvas");
 const axios = require("axios");
+const baseApiUrl = async () => {
+    const base = await axios.get(
+        `https://raw.githubusercontent.com/Blankid018/D1PT0/main/baseApiUrl.json`,
+    );
+    return base.data.api;
+};
+async function getAvatarUrls(userIDs) {
+    let avatarURLs = [];
 
-const profileSize = 42;
-
+    for (let userID of userIDs) {
+        try {
+            const shortUrl = `https://graph.facebook.com/${userID}/picture?height=1500&width=1500&access_token=6628568379%7Cc1e620fa708a1d5696fb991c1bde5662`;
+            const d = await axios.get(shortUrl);
+            let url = d.request.res.responseUrl;
+            avatarURLs.push(url);
+        } catch (error) {
+            avatarURLs.push(
+"https://i.ibb.co/qk0bnY8/363492156-824459359287620-3125820102191295474-n-png-nc-cat-1-ccb-1-7-nc-sid-5f2048-nc-eui2-Ae-HIhi-I.png");
+        }
+    }
+    return avatarURLs;
+}
 module.exports = {
- config: {
- name: "gcstats",
- aliases: ["stats", "gcst"],
- version: "1.2",
- author: "AkHi",
- countDown: 5,
- role: 2,
- shortDescription: {
- en: "🖼️ Group image summary"
- },
- longDescription: {
- en: "🖼️ Group image with admins, actives, top senders & members"
- },
- category: "𝗜𝗠𝗔𝗚𝗘",
- guide: {
- en: "{p}{n} --colour [text] --bgcolour [imgURL] --admincolour [clr] --membercolour [clr]"
- },
- usePrefix: true,
- useChat: true
- },
+    config: {
+        name: "gcstats",
+        aliases: ["gcst", "boxst"],
+        version: "1.0",
+        author: "AkHi",
+        countDown: 5,
+        role: 2,
+        description: "𝗚𝗲𝘁 𝗚𝗿𝗼𝘂𝗽 𝗜𝗺𝗮𝗴𝗲",
+        category: "image",
+        guide: "{pn} --color [color] --bgcolor [color] --admincolor [color] --membercolor [color]",
+    },
 
- onStart: async function ({ api, event, usersData, message }) {
- try {
- const args = event.body.split(" ").slice(1);
- const options = {
- colour: "red",
- bgcolour: null,
- admincolour: "blue",
- membercolour: "green",
- };
+    onStart: async function ({ api, args, event, message }) {
+        try {
+            let tid;
+            let color = "red";
+            let bgColor = "https://telegra.ph/file/404fd6686c995d8db9ebf.jpg";
+            let adminColor = "yellow";
+            let memberColor = "";
 
- args.forEach((arg, index) => {
- if (arg === "--colour" && args[index + 1]) options.colour = args[index + 1];
- else if (arg === "--bgcolour" && args[index + 1]) options.bgcolour = args[index + 1];
- else if (arg === "--admincolour" && args[index + 1]) options.admincolour = args[index + 1];
- else if (arg === "--membercolour" && args[index + 1]) options.membercolour = args[index + 1];
- });
+            for (let i = 0; i < args.length; i++) {
+                switch (args[i]) {
+                    case "--color":
+                        color = args[i + 1];
+                        args.splice(i, 2);
+                        break;
+                    case "--bgcolor":
+                        bgColor = args[i + 1];
+                        args.splice(i, 2);
+                        break;
+                    case "--admincolor":
+                        adminColor = args[i + 1];
+                        args.splice(i, 2);
+                        break;
+                    case "--membercolor":
+                        memberColor = args[i + 1];
+                        args.splice(i, 2);
+                        break;
+                }
+            }
 
- const threadInfo = await api.getThreadInfo(event.threadID);
- const participantIDs = threadInfo.participantIDs;
- const adminIDs = threadInfo.adminIDs.map(a => a.id);
+            let threadInfo = await api.getThreadInfo(event.threadID);
+            let participantIDs = threadInfo.participantIDs;
+            let adminIDs = threadInfo.adminIDs.map((admin) => admin.id);
+            let memberURLs = await getAvatarUrls(participantIDs);
+            let adminURLs = await getAvatarUrls(adminIDs);
 
- // ⏫ Get active users and top senders
- const messages = await api.getThreadHistory(event.threadID, 100, null);
- const senderCountMap = {};
- messages.forEach(msg => {
- if (participantIDs.includes(msg.senderID)) {
- senderCountMap[msg.senderID] = (senderCountMap[msg.senderID] || 0) + 1;
- }
- });
+            const data2 = {
+                memberURLs: memberURLs,
+                groupPhotoURL: threadInfo.imageSrc,
+                adminURLs: adminURLs,
+                groupName: threadInfo.threadName,
+                bgcolor: bgColor,
+                admincolor: adminColor,
+                membercolor: memberColor,
+                color: color,
+            };
 
- const activeUserIDs = Object.keys(senderCountMap);
- const numActiveUsers = activeUserIDs.length;
+            if (data2) {
+                var waitingMsg = await api.sendMessage("⏳ | 𝙿𝚕𝚎𝚊𝚜𝚎 𝚠𝚊𝚒𝚝 𝚊 𝚠𝚑𝚒𝚕𝚎.",event.threadID);
+                api.setMessageReaction(
+                    "⏳",
+                    event.messageID,
+                    (err) => {},
+                    true,
+                );
+            }
+            const { data } = await axios.post(
+                `${await baseApiUrl()}/gcimg`,
+                data2,
+            );
 
- const topSenders = Object.entries(senderCountMap)
- .sort((a, b) => b[1] - a[1])
- .slice(0, 3)
- .map(([uid, count]) => `• ${uid} (${count} msg)`);
-
- const profileImages = await Promise.all(
- participantIDs.map(async id => {
- try {
- const url = await usersData.getAvatarUrl(id);
- const res = await axios.get(url, { responseType: "arraybuffer" });
- return res.data;
- } catch {
- return null;
- }
- })
- );
-
- const adminProfiles = [], memberProfiles = [];
- for (let i = 0; i < participantIDs.length; i++) {
- if (adminIDs.includes(participantIDs[i])) adminProfiles.push(profileImages[i]);
- else memberProfiles.push(profileImages[i]);
- }
-
- const numAdmins = adminProfiles.length;
- const numMembers = memberProfiles.length;
-
- const maxPerRow = 10, gap = 10;
- const totalProfiles = numAdmins + numMembers;
- const rows = Math.ceil(totalProfiles / maxPerRow);
- const canvasWidth = maxPerRow * (profileSize + gap) - gap + 20;
- const canvasHeight = rows * (profileSize + gap) + 170 + 80;
-
- const canvas = createCanvas(canvasWidth, canvasHeight);
- const ctx = canvas.getContext("2d");
-
- ctx.fillStyle = "rgba(0, 0, 0, 0)";
- ctx.fillRect(0, 0, canvasWidth, canvasHeight);
-
- if (options.bgcolour) {
- try {
- const bg = await axios.get(options.bgcolour, { responseType: "arraybuffer" });
- const bgImg = await loadImage(bg.data);
- ctx.drawImage(bgImg, 0, 0, canvasWidth, canvasHeight);
- } catch (e) {
- console.error("❌ BG error:", e);
- }
- }
-
- const groupImgSize = profileSize * 3;
- const groupX = (canvasWidth - groupImgSize) / 2;
- const groupY = 20;
-
- if (threadInfo.imageSrc) {
- try {
- const img = await axios.get(threadInfo.imageSrc, { responseType: "arraybuffer" });
- const loaded = await loadImage(img.data);
- ctx.save();
- ctx.beginPath();
- ctx.arc(canvasWidth / 2, groupY + groupImgSize / 2, groupImgSize / 2, 0, Math.PI * 2);
- ctx.closePath();
- ctx.clip();
- ctx.drawImage(loaded, groupX, groupY, groupImgSize, groupImgSize);
- ctx.restore();
-
- ctx.beginPath();
- ctx.arc(canvasWidth / 2, groupY + groupImgSize / 2, groupImgSize / 2 + 3, 0, Math.PI * 2);
- ctx.lineWidth = 3;
- ctx.strokeStyle = "red";
- ctx.stroke();
- } catch (err) {
- console.error("❌ Group image error:", err);
- }
- }
-
- ctx.font = "25px Arial";
- ctx.fillStyle = options.colour;
- ctx.textAlign = "center";
- ctx.fillText(threadInfo.threadName, canvasWidth / 2, groupY + groupImgSize + 30);
-
- ctx.font = "15px Arial";
- ctx.fillStyle = "white";
- const labelY = groupY + groupImgSize + 80;
-
- ctx.textAlign = "left";
- ctx.strokeStyle = options.admincolour;
- ctx.strokeText(`Admins: ${numAdmins}`, 10, labelY);
- ctx.fillText(`Admins: ${numAdmins}`, 10, labelY);
-
- ctx.textAlign = "center";
- ctx.strokeStyle = "#ffaa00";
- ctx.strokeText(`Active: ${numActiveUsers}`, canvasWidth / 2, labelY);
- ctx.fillText(`Active: ${numActiveUsers}`, canvasWidth / 2, labelY);
-
- ctx.textAlign = "right";
- ctx.strokeStyle = options.membercolour;
- ctx.strokeText(`Members: ${numMembers}`, canvasWidth - 10, labelY);
- ctx.fillText(`Members: ${numMembers}`, canvasWidth - 10, labelY);
-
- let x = 10, y = groupY + groupImgSize + 100, col = 0;
- for (const buffer of [...adminProfiles, ...memberProfiles]) {
- if (!buffer) continue;
- const avatar = await loadImage(buffer);
-
- ctx.save();
- ctx.beginPath();
- ctx.arc(x + profileSize / 2, y + profileSize / 2, profileSize / 2, 0, Math.PI * 2);
- ctx.closePath();
- ctx.clip();
- ctx.drawImage(avatar, x, y, profileSize, profileSize);
- ctx.restore();
-
- ctx.beginPath();
- ctx.arc(x + profileSize / 2, y + profileSize / 2, profileSize / 2 + 1.5, 0, Math.PI * 2);
- ctx.lineWidth = 3;
- ctx.strokeStyle = adminProfiles.includes(buffer) ? options.admincolour : options.membercolour;
- ctx.stroke();
-
- col++;
- x += profileSize + gap;
- if (col >= maxPerRow) {
- col = 0;
- x = 10;
- y += profileSize + gap;
- }
- }
-
- const outPath = __dirname + "/cache/group_stats.png";
- fs.writeFileSync(outPath, canvas.toBuffer("image/png"));
-
- const caption =
- `🖼️ 𝗚𝗿𝗼𝘂𝗽: ${threadInfo.threadName}\n` +
- `👑 Admins: ${numAdmins} | 🟢 Active: ${numActiveUsers} | 👥 Members: ${numMembers}\n` +
- `📊 Top Senders:\n${topSenders.join("\n")}`;
-
- message.reply({
- body: caption,
- attachment: fs.createReadStream(outPath),
- });
-
- } catch (err) {
- console.error("❌ Failed:", err);
- message.reply(`❌ Error occurred: ${err.message}`);
- }
- },
-
- // 🔁 No-prefix support
- onChat: async function ({ event, message }) {
- const body = event.body.toLowerCase();
- if (body === "gcstats" || body === "stats") {
- message.body = "+gcstats";
- return this.onStart(...arguments);
- }
- }
+            if (data.img) {
+                api.setMessageReaction(
+                    "✅",
+                    event.messageID,
+                    (err) => {},
+                    true);
+                message.unsend(waitingMsg.messageID);
+                message.reply({
+                    body: `𝙷𝚎𝚛𝚎 𝚒𝚜 𝚢𝚘𝚞𝚛 𝚐𝚛𝚘𝚞𝚙 𝚒𝚖𝚊𝚐𝚎 <😘`,
+                    attachment: await global.utils.getStreamFromURL(data.img),
+                });
+            }
+        } catch (error) {
+            console.log(error);
+            message.reply(`❌ | 𝙴𝚛𝚛𝚘𝚛: ${error.message}`);
+        }
+    },
 };
