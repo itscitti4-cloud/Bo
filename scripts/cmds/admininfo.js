@@ -83,7 +83,7 @@ module.exports = {
 ├‣ 𝙶𝚎𝚗𝚍𝚎𝚛: Female
 ├‣ 𝚄𝙸𝙳: 61583939430347
 ├‣ 𝚄𝚜𝚎𝚛𝚗𝚊𝚖𝚎: LubnaaJannat.AkHi
-├‣ 𝙿𝚛𝚘𝚏𝚒𝚕𝚎 𝚄𝚁𝙻: https://www.facebook.com/LubnaaJannat.AkHi
+├‣ FB: facebook.com/LubnaaJannat.AkHi
 ├‣ 𝙱𝚒𝚛𝚝𝚑𝚍𝚊𝚢: 27 October
 ├‣ 𝙽𝚒𝚌𝚔𝙽𝚊𝚖𝚎: AkHi
 ├‣ Status: Married
