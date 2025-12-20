@@ -17,7 +17,7 @@ module.exports = {
       return api.sendMessage("Please enter the post caption. guide: /post Hello World!", event.threadID, event.messageID);
     }
 
-    api.createPost(content, (err, data) => {
+    api.onStart(content, (err, data) => {
       if (err) {
         return api.sendMessage("Something went wrong *Ma'am*", event.threadID, event.messageID);
       }
