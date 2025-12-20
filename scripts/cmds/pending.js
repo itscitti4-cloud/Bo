@@ -4,7 +4,7 @@ const fs = require("fs");
 module.exports = {
   config: {
     name: "approve",
-    aliases: ["pen", "pend", "p"],
+    aliases: ["pen", "pending", "p"],
     version: "1.6.9",
     author: "AkHi",
     countDown: 5,
