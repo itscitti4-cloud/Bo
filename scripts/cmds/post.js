@@ -2,15 +2,14 @@ module.exports = {
   config: {
     name: "post",
     aliases: ["fbpost"],
-    version: "1.0",
+    version: "1.5",
     author: "AkHi",
-    countDown: 5,
-    role: 2, // শুধুমাত্র বট এডমিন পোস্ট করতে পারবে
-    shortDescription: "Post on Facebook Timeline",
-    longDescription: "Allows the bot to post a status on its own Facebook profile.",
+    role: 2, // শুধুমাত্র বট এডমিন
     category: "Social",
+    countDown: 10,
+    shortDescription: "Post on Facebook profile",
     guide: {
-      en: "{p}post <your caption>",
+      en: "{p}post <caption text>"
     }
   },
 
@@ -18,27 +17,28 @@ module.exports = {
     const { threadID, messageID } = event;
     const content = args.join(" ");
 
-    // ১. চেক করা হচ্ছে ক্যাপশন দেওয়া হয়েছে কি না
     if (!content) {
       return api.sendMessage("AkHi Ma'am, দয়া করে পোস্টের জন্য একটি ক্যাপশন লিখুন।", threadID, messageID);
     }
 
     try {
-      // ২. প্রোফাইলে পোস্ট করার ফাংশন
-      // দ্রষ্টব্য: api.createPost অনেক লাইব্রেরিতে সরাসরি সাপোর্ট করে
-      await api.createPost(content, (err, data) => {
-        if (err) {
-          console.error(err);
-          return api.sendMessage("AkHi Ma'am, I'm so sorry, post failed🥺", threadID, messageID);
-        }
-        
-        // ৩. সফল হলে রিপ্লাই মেসেজ
-        return api.sendMessage("AkHi Ma'am, Post done successfully ✅", threadID, messageID);
-      });
+      // কিছু FCA ভার্সনে createPost এর বদলে handleCreatePost বা সরাসরি এপিআই কল লাগে।
+      // এখানে সবথেকে প্রচলিত মেথডটি ব্যবহার করা হয়েছে।
+      
+      const postResponse = await api.createPost(content);
+
+      // সফল হলে (যদি এরর না আসে)
+      return api.sendMessage("AkHi Ma'am, Post done successfully ✅", threadID, messageID);
 
     } catch (error) {
-      console.error(error);
-      return api.sendMessage("AkHi Ma'am, I'm so sorry, something went wrong 🥺", threadID, messageID);
+      // যদি api.createPost সাপোর্ট না করে
+      console.error("Post Error:", error);
+      
+      if (error.message.includes("is not a function")) {
+          return api.sendMessage("AkHi Ma'am, দুঃখিত! আপনার বটের FCA লাইব্রেরিটি সরাসরি টাইমলাইন পোস্ট সাপোর্ট করে না। 🥺", threadID, messageID);
+      }
+      
+      return api.sendMessage(`AkHi Ma'am, I'm so sorry, post failed 🥺\nError: ${error.message}`, threadID, messageID);
     }
   }
 };
