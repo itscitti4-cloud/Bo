@@ -5,7 +5,7 @@ module.exports = {
     name: "boxinfo",
     version: "1.0.0",
     role: 2,
-    author: "Lubna Jannat",
+    author: "AkHi",
     description: "Get detailed information about the group.",
     category: "group",
     guides: "{p}boxinfo",
