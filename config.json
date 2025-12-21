@@ -20,7 +20,10 @@
   },
   "adminBot": [
     "61583939430347"
-  ],
+  ]
+    "logThreadID": "25416434654648555",
+"sendNotification": true
+  ,
   "premiumUsers": [
     "61583939430347"
   ],
@@ -37,9 +40,6 @@
     ],
     "notes": "if you enable this feature, only the ids in the whiteListIds list can use the bot"
   },
-  {"logThreadID": "25416434654648555",
-"sendNotification": true
-}
   "whiteListModeThread": {
     "enable": false,
     "whiteListThreadIds": [],
