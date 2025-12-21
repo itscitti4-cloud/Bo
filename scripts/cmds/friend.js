@@ -88,14 +88,14 @@ module.exports = {
           const isAccept = action === "add";
 
           api.handleFriendRequest(user.userID, isAccept, (err) => {
-            if (err) return api.sendMessage("এরর হয়েছে: " + err.errorDescription, threadID, messageID);
-            return api.sendMessage(`${isAccept ? "✅ একসেপ্ট" : "❌ রিমুভ"} করা হয়েছে: ${user.name}`, threadID, messageID);
+            if (err) return api.sendMessage("Error: " + err.errorDescription, threadID, messageID);
+            return api.sendMessage(`${isAccept ? "✅ Accept" : "❌ Delete"} successfully: ${user.name}`, threadID, messageID);
           });
         } else {
-          return api.sendMessage("❌ ভুল নাম্বার! ১ থেকে ১০ এর মধ্যে একটি নাম্বার দিন।", threadID, messageID);
+          return api.sendMessage("❌ Wrong! Reply with correct number।", threadID, messageID);
         }
       } else {
-        return api.sendMessage("❌ ভুল ফরম্যাট! উদাহরণ: '1 add' অথবা 'add all'", threadID, messageID);
+        return api.sendMessage("❌ Wrong format! usage: '1 add' or 'add all'", threadID, messageID);
       }
 
     } catch (e) {
