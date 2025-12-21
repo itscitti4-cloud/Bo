@@ -2,17 +2,22 @@ const fs = require('fs-extra');
 const path = require('path');
 const axios = require('axios');
 
-const cacheDir = path.join(__dirname, "cache");
+// পাথের সমস্যা এড়াতে process.cwd() ব্যবহার করা ভালো
+const cacheDir = path.join(process.cwd(), "scripts/cmds/cache");
 const filePath = path.join(cacheDir, "babyData.json");
 
 if (!fs.existsSync(cacheDir)) {
     fs.mkdirSync(cacheDir, { recursive: true });
 }
 
+// শুরুতে ডাটাবেজ সেটআপ
 if (!fs.existsSync(filePath)) {
     const initialData = {
         responses: {},
         teachers: {},
+        randomReplies: [
+            "Hmm বলো শুনছি...", "Bolo baby 😘", "Ki bolba?", "ki somossa tor😾!"
+        ]
     };
     fs.writeJsonSync(filePath, initialData);
 }
@@ -20,7 +25,7 @@ if (!fs.existsSync(filePath)) {
 module.exports.config = {
     name: "bby",
     aliases: ["baby", "hinata", "babe", "citti"],
-    version: "9.0.0",
+    version: "9.0.1",
     author: "AkHi",
     countDown: 0,
     role: 0,
@@ -35,40 +40,45 @@ module.exports.config = {
 async function getSmartReply(input, data) {
     const text = input.toLowerCase().trim();
     
-    // ১. চেক করা যদি ডাটাবেজে উত্তর থাকে
-    if (data.responses[text]) {
+    // ১. ডাটাবেজ চেক
+    if (data.responses && data.responses[text]) {
         const responses = data.responses[text];
         return responses[Math.floor(Math.random() * responses.length)];
     }
 
-    // ২. ডাটাবেজে না থাকলে AI (SimSimi/Free Chat API) ব্যবহার করা
+    // ২. AI (SimSimi) ব্যবহার করা
     try {
         const res = await axios.get(`https://api.simsimi.vn/v1/simtalk`, {
-            params: { text: text, lc: 'bn' } // 'bn' for Bengali
+            params: { text: text, lc: 'bn' }
         });
         
         if (res.data && res.data.message) {
             return res.data.message;
         } else {
-            throw new Error("AI Error");
+            throw new Error("AI Empty");
         }
     } catch (err) {
-        // ৩. যদি AI ফেইল করে তবে র‍্যান্ডম রিপ্লাই
-        return data.randomReplies[Math.floor(Math.random() * data.randomReplies.length)];
+        // ৩. ফেইলসেফ রিপ্লাই (Error হ্যান্ডেল করা হয়েছে এখানে)
+        const fallback = data.randomReplies || ["Bolo baby...", "I'm listening!"];
+        return fallback[Math.floor(Math.random() * fallback.length)];
     }
 }
 
 // --- ১. Prefix কমান্ড হ্যান্ডলার ---
 module.exports.onStart = async ({ api, event, args }) => {
     const { threadID, messageID, senderID } = event;
+    if (!fs.existsSync(filePath)) return api.sendMessage("Database error!", threadID, messageID);
+    
     let data = fs.readJsonSync(filePath);
 
     try {
         if (!args[0]) return api.sendMessage("Bolo baby, ki bolba? 😘", threadID, messageID);
 
-        if (args[0] === 'remove' || args[0] === 'rm') {
+        const action = args[0].toLowerCase();
+
+        if (action === 'remove' || action === 'rm') {
             const key = args.slice(1).join(" ").toLowerCase();
-            if (data.responses[key]) {
+            if (data.responses && data.responses[key]) {
                 delete data.responses[key];
                 fs.writeJsonSync(filePath, data);
                 return api.sendMessage(`🗑️ | "${key}" Delete Successfully`, threadID, messageID);
@@ -76,7 +86,7 @@ module.exports.onStart = async ({ api, event, args }) => {
             return api.sendMessage("❌ | Data empty", threadID, messageID);
         }
 
-        if (args[0] === 'teach') {
+        if (action === 'teach') {
             const content = args.slice(1).join(" ").split(/\s*-\s*/);
             const ques = content[0]?.toLowerCase().trim();
             const ans = content[1]?.trim();
@@ -85,6 +95,8 @@ module.exports.onStart = async ({ api, event, args }) => {
 
             if (!data.responses[ques]) data.responses[ques] = [];
             data.responses[ques].push(ans);
+            
+            if (!data.teachers) data.teachers = {};
             data.teachers[senderID] = (data.teachers[senderID] || 0) + 1;
 
             fs.writeJsonSync(filePath, data);
@@ -104,7 +116,7 @@ module.exports.onReply = async ({ api, event, Reply }) => {
 
     return api.sendMessage(result, event.threadID, (err, info) => {
         if (!err) global.GoatBot.onReply.set(info.messageID, {
-            commandName: this.config.name,
+            commandName: "bby", // সরাসরি নাম লিখে দেওয়া ভালো
             messageID: info.messageID,
             author: event.senderID
         });
@@ -133,10 +145,11 @@ module.exports.onChat = async ({ api, event }) => {
 
         return api.sendMessage(result, event.threadID, (err, info) => {
             if (!err) global.GoatBot.onReply.set(info.messageID, {
-                commandName: this.config.name,
+                commandName: "bby",
                 messageID: info.messageID,
                 author: event.senderID
             });
         }, event.messageID);
     }
 };
+            
