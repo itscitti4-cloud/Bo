@@ -9,7 +9,7 @@ module.exports = {
     description: "Get detailed information about the group.",
     category: "group",
     guides: "{p}boxinfo",
-    countDown: 5
+    countDown: 2
   },
 
   onStart: async function ({ api, event, threadsData }) {
