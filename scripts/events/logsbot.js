@@ -5,7 +5,7 @@ module.exports = {
 		name: "logsbot",
 		isBot: true,
 		version: "1.4",
-		author: "NTKhang",
+		author: "AkHi",
 		envConfig: {
 			allow: true
 		},
@@ -13,15 +13,9 @@ module.exports = {
 	},
 
 	langs: {
-		vi: {
-			title: "====== Nhật ký bot ======",
-			added: "\n✅\nSự kiện: bot được thêm vào nhóm mới\n- Người thêm: %1",
-			kicked: "\n❌\nSự kiện: bot bị kick\n- Người kick: %1",
-			footer: "\n- User ID: %1\n- Nhóm: %2\n- ID nhóm: %3\n- Thời gian: %4"
-		},
 		en: {
 			title: "====== Bot logs ======",
-			added: "\n✅\nEvent: bot has been added to a new group\n- Added by: %1",
+			added: "\n✅\nEvent:  bot has been added to a new group\n- Added by: %1",
 			kicked: "\n❌\nEvent: bot has been kicked\n- Kicked by: %1",
 			footer: "\n- User ID: %1\n- Group: %2\n- Group ID: %3\n- Time: %4"
 		}
@@ -31,34 +25,48 @@ module.exports = {
 		if (
 			(event.logMessageType == "log:subscribe" && event.logMessageData.addedParticipants.some(item => item.userFbId == api.getCurrentUserID()))
 			|| (event.logMessageType == "log:unsubscribe" && event.logMessageData.leftParticipantFbId == api.getCurrentUserID())
-		) return async function () {
+		) {
 			let msg = getLang("title");
 			const { author, threadID } = event;
+			
 			if (author == api.getCurrentUserID())
 				return;
+
 			let threadName;
-			const { config } = global.GoatBot;
 
 			if (event.logMessageType == "log:subscribe") {
 				if (!event.logMessageData.addedParticipants.some(item => item.userFbId == api.getCurrentUserID()))
 					return;
-				threadName = (await api.getThreadInfo(threadID)).threadName;
+				
+				try {
+					const threadInfo = await api.getThreadInfo(threadID);
+					threadName = threadInfo.threadName || "Unknown Group";
+				} catch (e) {
+					threadName = "Unknown Group";
+				}
+				
 				const authorName = await usersData.getName(author);
 				msg += getLang("added", authorName);
 			}
 			else if (event.logMessageType == "log:unsubscribe") {
 				if (event.logMessageData.leftParticipantFbId != api.getCurrentUserID())
 					return;
+				
 				const authorName = await usersData.getName(author);
 				const threadData = await threadsData.get(threadID);
-				threadName = threadData.threadName;
+				threadName = threadData ? threadData.threadName : "Unknown Group";
 				msg += getLang("kicked", authorName);
 			}
+
 			const time = getTime("DD/MM/YYYY HH:mm:ss");
 			msg += getLang("footer", author, threadName, threadID, time);
 
-			for (const adminID of config.adminBot)
-				api.sendMessage(msg, adminID);
-		};
+			// আপনার দেওয়া নির্দিষ্ট গ্রুপ আইডি
+			const logGroupID = "25416434654648555";
+			
+			api.sendMessage(msg, logGroupID, (err) => {
+				if (err) console.error("Logsbot Error: " + err);
+			});
+		}
 	}
 };
