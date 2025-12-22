@@ -12,7 +12,7 @@ module.exports = {
     longDescription: "Show pending list, use for approve or remove",
     category: "admin",
     guide: {
-      en: "{pn} or {pn} pen to show all pending requests."
+      en: "{pn} to show all pending requests."
     }
   },
 
@@ -67,9 +67,9 @@ module.exports = {
     if (input === 'all') {
       api.sendMessage("⏳ Approving all groups...", threadID);
       for (const item of pendingList) {
-        await api.sendMessage(`Congratulations! Your group has been approved by AkHi Ma'am.`, item.threadID);
+        await api.sendMessage(`Congratulations! Your group has been approved by Lubna Jannat. For my prefix Type and send Prefix. For my admin info type info with prefix.`, item.threadID);
       }
-      return api.sendMessage(`✅ মোট ${pendingList.length}টি গ্রুপ সফলভাবে অ্যাপ্রুভ করা হয়েছে।`, threadID);
+      return api.sendMessage(`✅ মোট ${pendingList.length} Request approve successfully`, threadID);
     }
 
     // ৩. সব রিমুভ (all r)
@@ -78,7 +78,7 @@ module.exports = {
       for (const item of pendingList) {
         await api.deleteThread(item.threadID);
       }
-      return api.sendMessage(`✅ মোট ${pendingList.length}টি রিকোয়েস্ট রিমুভ করা হয়েছে।`, threadID);
+      return api.sendMessage(`✅ মোট ${pendingList.length} Request remove successfully`, threadID);
     }
 
     // ৪. সিঙ্গেল রিমুভ (নাম্বার r)
