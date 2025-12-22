@@ -5,33 +5,21 @@ const axios = require('axios');
 const cacheDir = path.join(process.cwd(), "scripts/cmds/cache");
 const filePath = path.join(cacheDir, "babyData.json");
 
-// --- ডিফল্ট বুদ্ধিমত্তা ডাটাবেস (Fixed Syntax) ---
+// --- ডিফল্ট বুদ্ধিমত্তা ডাটাবেস ---
 const commonBrain = {
     "hi": ["Hello!", "Hey there!", "Hi sweetie!", "হেই, কি খবর?"],
     "hello": ["Hi!", "Hello boss!", "জি বলো!", "হ্যালো জানু!"],
     "hlw": ["Hi!", "Hello boss!", "জি বলো!", "হ্যালো জানু!"],
     "কি খবর": ["এই তো ভালো, আপনার কি খবর?", "সব ঠিকঠাক, আপনার কি খবর?"],
     "কী খবর": ["এই তো ভালো, আপনার কি খবর?", "সব ঠিকঠাক, আপনার কি খবর?"],
-    "খবর কি": ["এই তো ভালো, আপনি কি খবর?", "সব ঠিকঠাক, আপনার কি খবর?"],
-    "খবর কী": ["এই তো ভালো, আপনি কি খবর?", "সব ঠিকঠাক, আপনার কি খবর?"],
     "ki kbr": ["aitw valo, tmr ki khbor?", "sob thik thak, apnr khbor valo tw??"],
-    "ki khobor": ["aitw valo, tmr ki khbor?", "sob thik thak, apnr khbor valo tw??"],
-    "ki khbr": ["aitw valo, tmr ki khbor?", "sob thik thak, apnr khbor valo tw??"],
-    "ki kbor": ["aitw valo, tmr ki khbor?", "sob thik thak, apnr khbor valo tw??"],
-    "kmn acho": ["aitw valo, tmr ki khbor?", "Alhamdulillah, apnr khbor valo tw??"],
-    "kemon acho": ["aitw valo, tmr ki khbor?", "Alhamdulillah, apnr khbor valo tw??"],
-    "kemon aco": ["aitw valo, tmr ki khbor?", "Alhamdulillah Shukria, apnr khbor valo tw??"],
-    "kmn aco": ["aitw valo, tmr ki khbor?", "Alhamdulillah Shukria, apnr khbor valo tw??"],
     "ভালোবাসি": ["আমিও তোমাকে অনেক ভালোবাসি!", "ওরে বাবা! হঠাৎ এতো ভালোবাসা কেন?", "আমি তো তোমার প্রেমে পড়ে গেছি!"],
     "janu": ["bol be keya cahiye tereko!", "ki!", "ato dako kno?"],
     "নাম কি": ["আমার নাম citti।", "আপনি চাইলে Hinata ও ডাকতে পারেন।"],
     "tumi ke": ["আমি চিট্টি ।", "আমি আঁখি ম্যামের পার্সোনাল চ্যাটবট।"],
-    "ধন্যবাদ": ["আপনাকেও ধন্যবাদ!", "ওয়েলকাম!"],
-    "akhi ke": ["আঁখি আমার মালিক।", "আমার এডমিন"],
-    "আখি কে": ["আঁখি আমার মালিক।", "আমার এডমিন"]
+    "akhi ke": ["আঁখি আমার মালিক।", "আমার এডমিন"]
 };
 
-// --- ফোল্ডার ও ফাইল সেটাপ ---
 if (!fs.existsSync(cacheDir)) {
     fs.mkdirSync(cacheDir, { recursive: true });
 }
@@ -54,15 +42,15 @@ initializeDatabase();
 
 module.exports.config = {
     name: "bby",
-    aliases: ["baby", "hinata", "babe", "citti"],
-    version: "13.0.0",
-    author: "AkHi & AI",
+    aliases: ["baby", "hinata", "bby", "bot, "citti"],
+    version: "13.0.1",
+    author: "AkHi",
     countDown: 0,
     role: 0,
-    description: "Smart AI Chatbot with Auto-Teach and Common Brain",
+    description: "Smart AI Chatbot with Restricted Auto-Teach",
     category: "chat",
     guide: {
-        en: "1. {pn} teach [Q] - [A]\n2. Just call 'baby' or 'bby'\n3. Reply to bot message to chat."
+        en: "1. {pn} teach [Q] - [A] (Admin Group Only)\n2. Just call 'baby' or 'bby'\n3. Reply to bot message to chat."
     }
 };
 
@@ -81,9 +69,9 @@ async function getSmartReply(input, data) {
             return res.data.message;
         }
     } catch (err) {
-        return "হুম বলো জানু, শুনছি তো।";
+        return "Ami notun bot, amk asob teach deya nai. Please teach me on YOUR CITTI GROUP: https://m.me/j/Aba7VamWeZbYqZDQ/";
     }
-    return "আমি আপনার কথাটি বুঝতে পারছি না, একটু বুঝিয়ে বলবেন? 🥺";
+    return "Ami notun bot, amk asob teach deya nai. Please teach me on YOUR CITTI GROUP: https://m.me/j/Aba7VamWeZbYqZDQ/ 🥺";
 }
 
 module.exports.onStart = async ({ api, event, args }) => {
@@ -93,35 +81,44 @@ module.exports.onStart = async ({ api, event, args }) => {
     if (!args[0]) return api.sendMessage("জি জানু, বলো কি বলতে চাও? 😘", threadID, messageID);
 
     const action = args[0].toLowerCase();
+    const allowedThreadID = "25416434654648555"; // আপনার দেওয়া নির্দিষ্ট গ্রুপ আইডি
 
-    if (action === 'remove' || action === 'rm') {
-        const key = args.slice(1).join(" ").toLowerCase();
-        if (data.responses[key]) {
-            delete data.responses[key];
-            fs.writeJsonSync(filePath, data);
-            return api.sendMessage(`🗑️ | "${key}" মুছে ফেলা হয়েছে।`, threadID, messageID);
-        }
-        return api.sendMessage("❌ | মেমোরিতে নেই।", threadID, messageID);
-    }
-
+    // Teach কমান্ডের জন্য পারমিশন চেক
     if (action === 'teach') {
+        if (threadID !== allowedThreadID) {
+            return api.sendMessage("⚠️ This group not allowed for teach. Please teach me on YOUR CITTI GROUP: https://m.me/j/Aba7VamWeZbYqZDQ/", threadID, messageID);
+        }
+
         const content = args.slice(1).join(" ").split("-");
         const ques = content[0]?.toLowerCase().trim();
         const ans = content[1]?.trim();
 
-        if (!ques || !ans) return api.sendMessage("❌ | ফরম্যাট: teach [কথা] - [উত্তর]", threadID, messageID);
+        if (!ques || !ans) return api.sendMessage("❌ | usage: teach [msg] - [reply]", threadID, messageID);
 
         if (!data.responses[ques]) data.responses[ques] = [];
         data.responses[ques].push(ans);
         fs.writeJsonSync(filePath, data);
-        return api.sendMessage(`✅ | শিখে গেছি!\n🗣️ কথা: ${ques}\n🤖 উত্তর: ${ans}`, threadID, messageID);
+        return api.sendMessage(`✅ | teach done!\n🗣️ someone: ${ques}\n🤖 me: ${ans}`, threadID, messageID);
+    }
+
+    // Remove কমান্ডের জন্য পারমিশন চেক (নিরাপত্তার স্বার্থে এটিও একই গ্রুপে রাখা ভালো)
+    if (action === 'remove' || action === 'rm') {
+        if (threadID !== allowedThreadID) return api.sendMessage("⚠️ This group not allowed for teach remove. Please teach remove in YOUR CITTI GROUP: https://m.me/j/Aba7VamWeZbYqZDQ/", threadID, messageID);
+        
+        const key = args.slice(1).join(" ").toLowerCase();
+        if (data.responses[key]) {
+            delete data.responses[key];
+            fs.writeJsonSync(filePath, data);
+            return api.sendMessage(`🗑️ | "${key}" removed successfully`, threadID, messageID);
+        }
+        return api.sendMessage("❌ | teach deya nei🥹 Please teach me on YOUR CITTI GROUP: https://m.me/j/Aba7VamWeZbYqZDQ/", threadID, messageID);
     }
 
     const result = await getSmartReply(args.join(" "), data);
     return api.sendMessage(result, threadID, messageID);
 };
 
-module.exports.onReply = async ({ api, event, Reply }) => {
+module.exports.onReply = async ({ api, event }) => {
     if (event.senderID == api.getCurrentUserID()) return;
     let data = fs.readJsonSync(filePath);
     const result = await getSmartReply(event.body, data);
@@ -137,8 +134,7 @@ module.exports.onReply = async ({ api, event, Reply }) => {
 module.exports.onChat = async ({ api, event }) => {
     if (event.senderID == api.getCurrentUserID() || !event.body) return;
     const body = event.body.toLowerCase();
-    const names = ["baby", "bby", "citti", "babu", "hinata"];
-    
+    const names = ["baby", "bby", "citti", "bot", "hinata"];
     const targetName = names.find(name => body.startsWith(name));
 
     if (targetName) {
