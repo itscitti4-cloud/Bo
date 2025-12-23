@@ -28,7 +28,7 @@ module.exports = {
       try {
         const geminiConfig = global.config.GEMINI;
         const apiKey = geminiConfig.API_Key;
-        const model = "gemini-2.5-flash"; // এপিআই-এর জন্য এটিই সবচেয়ে স্টেবল নাম
+        const model = "gemini-1.5-flash"; // এপিআই-এর জন্য এটিই সবচেয়ে স্টেবল নাম
         const systemInstruction = geminiConfig.SystemInstruction;
 
         // এপিআই ইউআরএল এবং ডাটা ফরম্যাট পরিবর্তন করা হয়েছে
@@ -36,7 +36,7 @@ module.exports = {
 
         const res = await axios.post(url, {
           contents: [{
-            parts: [{ text: `${systemInstruction}\n\nUser: ${prompt}` }]
+            parts: [{ text: prompt }]
           }]
         });
 
