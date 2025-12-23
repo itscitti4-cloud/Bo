@@ -3,19 +3,21 @@ const axios = require("axios");
 module.exports = {
   config: {
     name: "citti",
-    version: "2.6.0",
+    version: "3.0.0",
     role: 0,
-    author: "AkHi and Sabu",
-    description: "Citti AI fixed Gemini setup",
+    author: "AkHi",
+    description: "Gemini AI - No Prefix Support",
     category: "chat",
     guide: "{pn} <question>",
-    countDown: 5
+    countDown: 2
   },
 
   onChat: async function ({ api, event }) {
     const { threadID, messageID, body, messageReply } = event;
-    
-    const isCittiStart = body && body.toLowerCase().startsWith("citti");
+    if (!body) return;
+
+    // ১. চেক করা: মেসেজ "citti" দিয়ে শুরু কি না অথবা বটের মেসেজে রিপ্লাই কি না
+    const isCittiStart = body.toLowerCase().startsWith("citti");
     const isReplyToBot = messageReply && messageReply.senderID == api.getCurrentUserID();
 
     if (isCittiStart || isReplyToBot) {
@@ -26,34 +28,33 @@ module.exports = {
       } else if (!prompt) return;
 
       try {
-        const geminiConfig = global.config.GEMINI;
-        const apiKey = geminiConfig.API_Key;
-        const model = "gemini-1.5-flash"; // এপিআই-এর জন্য এটিই সবচেয়ে স্টেবল নাম
-        const systemInstruction = geminiConfig.SystemInstruction;
+        // সরাসরি API Key বসিয়ে দিচ্ছি (config.json থেকে রিড করতে সমস্যা হতে পারে)
+        const apiKey = "AIzaSyBbFzulfEGJBL40T-P5kov0WlBL7cM9ip8"; 
+        const model = "gemini-1.5-flash"; 
+        const systemInstruction = "You are Chitti. Developed by Lubna Jannat AkHi. Answer in Bengali if asked in Bengali, English if asked in English. Give short and direct answers.";
 
-        // এপিআই ইউআরএল এবং ডাটা ফরম্যাট পরিবর্তন করা হয়েছে
         const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
 
         const res = await axios.post(url, {
           contents: [{
-            parts: [{ text: prompt }]
+            parts: [{ text: `System Instruction: ${systemInstruction}\n\nUser Question: ${prompt}` }]
           }]
         });
 
         if (res.data && res.data.candidates && res.data.candidates[0].content) {
-          const reply = res.data.candidates[0].content.parts[0].text;
-          api.sendMessage(reply, threadID, messageID);
-        } else {
-          // যদি এপিআই থেকে কোনো টেক্সট না আসে
-          api.sendMessage("গুগল এআই থেকে কোনো উত্তর পাওয়া যায়নি। দয়া করে আবার চেষ্টা করুন।", threadID, messageID);
+          const replyText = res.data.candidates[0].content.parts[0].text;
+          api.sendMessage(replyText, threadID, messageID);
         }
 
       } catch (error) {
-        // টার্মিনালে আসল ভুলটি দেখার জন্য
-        console.error("Gemini Error Details:", error.response ? JSON.stringify(error.response.data) : error.message);
-        
-        api.sendMessage("দুঃখিত, কানেকশনে সমস্যা হচ্ছে। দয়া করে আপনার API Key সঠিক কিনা চেক করুন।", threadID, messageID);
+        console.error("Gemini Direct Error:", error.response ? error.response.data : error.message);
+        // যদি এপিআই কাজ না করে তবে টার্মিনালে মেসেজ আসবে
       }
     }
+  },
+
+  onStart: async function ({ api, event }) {
+    api.sendMessage("অনুগ্রহ করে শুধু 'citti' লিখে প্রশ্ন করুন।", event.threadID, event.messageID);
   }
 };
+            
