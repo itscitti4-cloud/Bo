@@ -6,7 +6,7 @@ module.exports = {
     version: "2.5.0",
     role: 0,
     author: "AkHi and Sabu",
-    description: "Citti AI bot with Gemini 2.5 Flash support",
+    description: "Citti AI bot with Gemini 1.5 Flash support",
     category: "chat",
     guide: "{pn} <question>",
     countDown: 5
@@ -32,7 +32,7 @@ module.exports = {
         const geminiConfig = global.config.GEMINI;
         const apiKey = geminiConfig.API_Key;
         // আপনার স্ক্রিনশট অনুযায়ী মডেল নাম gemini-2.5-flash সেট করা হয়েছে
-        const model = "gemini-2.5-flash"; 
+        const model = "gemini-1.5-flash"; 
         const systemInstruction = geminiConfig.SystemInstruction;
 
         // Gemini API কল
