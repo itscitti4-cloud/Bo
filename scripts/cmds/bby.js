@@ -3,7 +3,7 @@ const API_ENDPOINT = 'https://metakexbyneokex.fly.dev/chat';
 
 module.exports = {
   config: {
-    name: "baby",
+    name: "bby",
     version: "2.0.0",
     role: 0,
     author: "AkHi",
