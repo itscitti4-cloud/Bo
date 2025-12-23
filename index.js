@@ -40,13 +40,10 @@ startProject();
 
 const express = require('express');
 const app = express();
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 10000;
 
-app.get('/', (req, res) => {
-  res.send('Citti Bot is running successfully!');
-});
+app.get('/', (req, res) => res.send('Citti Bot is Active!'));
 
 app.listen(port, () => {
   console.log(`Server is running on port ${port}`);
 });
-
