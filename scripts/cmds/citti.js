@@ -1,14 +1,13 @@
-const axios = require("axios");
+const { GoogleGenerativeAI } = require("@google/generative-ai");
 
 module.exports = {
   config: {
     name: "citti",
-    version: "3.2.0",
-    role: 0,
+    version: "6.0.0",
     author: "AkHi",
-    description: "Gemini AI - Direct Text Response",
-    category: "chat",
-    guide: "{pn} <question>",
+    role: 0,
+    category: "ai",
+    guide: "{pn} <প্রশ্ন>",
     countDown: 2
   },
 
@@ -16,47 +15,62 @@ module.exports = {
     const { threadID, messageID, body, messageReply, senderID } = event;
     if (!body || senderID == api.getCurrentUserID()) return;
 
+    // ১. আপনার দেওয়া নামগুলোর তালিকা (Keywords)
+    const keywords = ["citti", "চিট্টি", "বেবি", "হিনাতা", "বট", "bby", "baby", "hinata", "bot"];
+    
     const bodyLower = body.toLowerCase();
-    const isCittiStart = bodyLower.startsWith("citti");
+    
+    // ২. চেক করা: মেসেজের শুরুতে কোনো কি-ওয়ার্ড আছে কি না
+    const matchedKeyword = keywords.find(word => bodyLower.startsWith(word));
+    
+    // ৩. চেক করা: বটের মেসেজে রিপ্লাই দেওয়া হয়েছে কি না
     const isReplyToBot = messageReply && messageReply.senderID == api.getCurrentUserID();
 
-    if (isCittiStart || isReplyToBot) {
-      // "citti" শব্দটুকু বাদ দিয়ে বাকি প্রশ্নটি নেওয়া
-      let prompt = isCittiStart ? body.slice(5).trim() : body.trim();
+    if (matchedKeyword || isReplyToBot) {
+      let prompt = "";
 
-      // যদি শুধু "citti" লিখে মেসেজ দেয়
-      if (isCittiStart && !prompt) {
-        return api.sendMessage("জি! আমি Citti বলছি। আপনাকে কীভাবে সাহায্য করতে পারি?", threadID, messageID);
+      if (matchedKeyword) {
+        // কি-ওয়ার্ড টুকু বাদ দিয়ে বাকি অংশ প্রম্পট হিসেবে নেওয়া
+        prompt = body.slice(matchedKeyword.length).trim();
+      } else {
+        // রিপ্লাই এর ক্ষেত্রে পুরো মেসেজটিই প্রম্পট
+        prompt = body.trim();
+      }
+
+      // যদি শুধু নাম ধরে ডাকে (সাথে কোনো প্রশ্ন না থাকে)
+      if (matchedKeyword && !prompt) {
+        const nicknames = {
+            "citti": "জি! আমি Citti বলছি।",
+            "চিট্টি": "জি জানু, বলো কী সাহায্য করতে পারি?",
+            "baby": "জি বেবি! বলো শুনছি।",
+            "bby": "জি সোনা! বলো কী হয়েছে?",
+            "hinata": "হ্যাঁ, আমি হিনাতা। তোমাকে কীভাবে সাহায্য করতে পারি?",
+            "bot": "জি, আমি একটি এআই বট। আপনার প্রশ্নের উত্তর দিতে প্রস্তুত।"
+        };
+        const replyMsg = nicknames[matchedKeyword] || "জি! আমি শুনছি, বলুন আপনাকে কীভাবে সাহায্য করতে পারি?";
+        return api.sendMessage(replyMsg, threadID, messageID);
       }
 
       try {
-        const apiKey = "AIzaSyBbFzulfEGJBL40T-P5kov0WlBL7cM9ip8"; 
-        const model = "gemini-1.5-flash";
-        
-        const systemInstruction = "You are Chitti. Developed by Lubna Jannat AkHi. Answer in Bengali if asked in Bengali, English if asked in English. Give short and direct answers.";
-
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
-
-        const res = await axios.post(url, {
-          contents: [{
-            parts: [{ text: `System: ${systemInstruction}\nUser: ${prompt}` }]
-          }]
+        // SDK সেটআপ
+        const genAI = new GoogleGenerativeAI("AIzaSyBbFzulfEGJBL40T-P5kov0WlBL7cM9ip8");
+        const model = genAI.getGenerativeModel({ 
+            model: "gemini-1.5-flash",
+            // সিস্টেম ইন্সট্রাকশন যাতে বট নিজের নাম ও পরিচয় মনে রাখে
+            systemInstruction: "Your name is Citti (or Hinata/Baby/Bot as called). Developed by Lubna Jannat AkHi. Always answer in a friendly and helpful way. If asked in Bengali, reply in Bengali."
         });
 
-        if (res.data && res.data.candidates && res.data.candidates[0].content) {
-          const replyText = res.data.candidates[0].content.parts[0].text;
-          
-          // সরাসরি টেক্সট পাঠানো (স্টাইল ছাড়া)
-          api.sendMessage(replyText, threadID, messageID);
-        }
+        // এআই জেনারেট কন্টেন্ট
+        const result = await model.generateContent(prompt);
+        const response = await result.response;
+        const text = response.text();
+
+        api.sendMessage(text, threadID, messageID);
 
       } catch (error) {
-        console.error("Gemini Error:", error.response ? JSON.stringify(error.response.data) : error.message);
+        console.error("SDK Error:", error.message);
+        // ৪২৯ বা ইন্টারনাল এরর হলে টার্মিনালে চেক করুন
       }
     }
-  },
-
-  onStart: async function ({ api, event }) {
-    api.sendMessage("অনুগ্রহ করে শুধু 'citti' লিখে প্রশ্ন করুন।", event.threadID, event.messageID);
   }
 };
