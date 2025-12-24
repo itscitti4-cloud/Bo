@@ -63,6 +63,7 @@ function formatAmount(num) {
     if (num >= 1e3) return (num / 1e3).toFixed(1) + "K";
     return num.toLocaleString();
 }
+        
 
 /**
  * সাধারণ টেক্সটকে বোল্ড সেরিপ (Stylish) টেক্সটে রূপান্তর
@@ -75,4 +76,7 @@ function toStylishText(text) {
     };
     return text.toString().split('').map(char => map[char] || char).join('');
         }
-        
+// টাকা বিয়োগ বা যোগ করার পর এভাবে সেভ করতে হয়
+await usersData.set(userID, { 
+    money: newBalance 
+});
