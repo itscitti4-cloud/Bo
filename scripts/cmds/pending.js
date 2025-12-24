@@ -73,16 +73,16 @@ module.exports = {
       for (const item of pendingList) {
         await delay(2500); // ২.৫ সেকেন্ড বিরতি
         try {
-          await api.sendMessage(`Congratulations! Your group has been approved by Lubna Jannat. For my prefix Type and send Prefix. For my admin info type info with prefix.`, item.threadID);
+          await api.sendMessage(`😀 Congratulations! Your group has been approved by Lubna Jannat 💚.`, item.threadID);
           count++;
         } catch (e) { console.log(`Error approving: ${item.threadID}`); }
       }
-      return api.sendMessage(`✅ মোট ${count} Request Approved Successful`, threadID);
+      return api.sendMessage(`✅ মোট ${count} Request Approved Successfully Ma'am`, threadID);
     }
 
     // ৩. সব রিমুভ (all r)
     if (input === 'all r') {
-      api.sendMessage(`⏳ ${pendingList.length} Request Remove Successfully Ma'am`, threadID);
+      api.sendMessage(`⏳ ${pendingList.length} Request Remove processing Ma'am`, threadID);
       let count = 0;
       for (const item of pendingList) {
         await delay(2500); // ২.৫ সেকেন্ড বিরতি
