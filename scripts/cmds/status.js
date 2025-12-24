@@ -8,7 +8,7 @@ module.exports = {
     name: "status",
     aliases: [ "cpanel", "status", "sts"],
     version: "1.0.2",
-    role: 0,
+    role: 2,
     author: "AkHi",
     description: "Premium Graphical Server Status",
     category: "system",
@@ -68,7 +68,7 @@ module.exports = {
       fs.writeFileSync(cachePath, buffer);
       
       return api.sendMessage({
-        body: "📊 | Server status generated successfully, Ma'am!",
+        body: "Server status generated successfully, Ma'am!",
         attachment: fs.createReadStream(cachePath)
       }, threadID, () => {
         if (fs.existsSync(cachePath)) fs.unlinkSync(cachePath);
