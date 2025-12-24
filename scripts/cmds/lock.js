@@ -5,7 +5,7 @@ module.exports = {
   config: {
     name: "lock",
     version: "1.5.0",
-    role: 1, // শুধুমাত্র এডমিনরা ব্যবহার করতে পারবে
+    role: 1,
     author: "AkHi",
     description: "group name, theme, Emoji And cover lock/antichange",
     category: "admin",
@@ -15,9 +15,12 @@ module.exports = {
 
   onStart: async function ({ api, event, args, message }) {
     const { threadID } = event;
-    const lockFile = path.join(__dirname, "cache", "lockData.json");
+    const cacheDir = path.join(__dirname, "cache");
+    const lockFile = path.join(cacheDir, "lockData.json");
 
+    if (!fs.existsSync(cacheDir)) fs.mkdirSync(cacheDir);
     if (!fs.existsSync(lockFile)) fs.writeJsonSync(lockFile, {});
+    
     let lockData = fs.readJsonSync(lockFile);
 
     if (args[0] === "on") {
@@ -26,56 +29,53 @@ module.exports = {
         name: threadInfo.threadName,
         emoji: threadInfo.emoji,
         color: threadInfo.color,
-        imageSrc: threadInfo.imageSrc,
         status: true
       };
       fs.writeJsonSync(lockFile, lockData);
-      return message.reply("🔒 | Group info lock on Successfully ✅. Now no one can change Name/theme/emoji/cover ❌");
+      return message.reply("🔒 | Group info lock ON successfully ✅");
     } 
     
     if (args[0] === "off") {
       if (lockData[threadID]) {
         lockData[threadID].status = false;
         fs.writeJsonSync(lockFile, lockData);
-        return message.reply("🔓 | Group info lock off Successfully ✅");
+        return message.reply("🔓 | Group info lock OFF successfully ✅");
       }
-      return message.reply("⚠️ | Group info lock is already off ❌");
+      return message.reply("⚠️ | Lock is already off.");
     }
 
-    return message.reply("Please type: !lock on or !lock off");
+    return message.reply("Use: lock on/off");
   },
 
   onEvent: async function ({ api, event }) {
-    const { threadID, logMessageType, logMessageData } = event;
+    const { threadID, logMessageType, logMessageData, author } = event;
     const lockFile = path.join(__dirname, "cache", "lockData.json");
 
     if (!fs.existsSync(lockFile)) return;
     let lockData = fs.readJsonSync(lockFile);
 
-    if (!lockData[threadID] || !lockData[threadID].status) return;
+    // যদি লক অন না থাকে বা পরিবর্তনকারী ব্যক্তি খোদ বট নিজে হয়, তবে কাজ করবে না
+    if (!lockData[threadID] || !lockData[threadID].status || author === api.getCurrentUserID()) return;
 
     const data = lockData[threadID];
 
-    // নাম পরিবর্তন রোধ
-    if (logMessageType === "log:thread-name") {
-      api.setTitle(data.name, threadID);
-    }
-
-    // ইমোজি পরিবর্তন রোধ
-    if (logMessageType === "log:thread-icon") {
-      api.setEmoji(data.emoji, threadID);
-    }
-
-    // থিম/কালার পরিবর্তন রোধ
-    if (logMessageType === "log:thread-color") {
-      api.changeThreadColor(data.color, threadID);
-    }
-
-    // প্রোফাইল পিকচার পরিবর্তন রোধ (বটের কাছে ছবি থাকলে)
-    if (logMessageType === "log:thread-image") {
-      // দ্রষ্টব্য: ছবি অটো-রিসেট করার জন্য বটের এডমিন পারমিশন এবং ছবির ইউআরএল প্রয়োজন হয়।
-      // সাধারণ নিরাপত্তার জন্য এটি নাম ও ইমোজিতে বেশি কার্যকর।
+    switch (logMessageType) {
+      case "log:thread-name":
+        if (logMessageData.name !== data.name) {
+          api.setTitle(data.name, threadID);
+        }
+        break;
+      case "log:thread-icon":
+        if (logMessageData.thread_icon !== data.emoji) {
+          api.setEmoji(data.emoji, threadID);
+        }
+        break;
+      case "log:thread-color":
+      case "log:thread-style":
+        if (logMessageData.thread_color !== data.color) {
+          api.changeThreadColor(data.color, threadID);
+        }
+        break;
     }
   }
 };
-        
