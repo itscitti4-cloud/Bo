@@ -6,6 +6,7 @@ const os = require('os');
 module.exports = {
   config: {
     name: "status",
+    aliases: ["cp", "cpanel", "status", "sts"],
     version: "1.0.2",
     role: 0,
     author: "AkHi",
