@@ -1,13 +1,13 @@
 module.exports = {
     config: {
-        name: "balancec",
+        name: "balance",
         aliases: ["bal", "money", "wallet"],
         version: "2.1.0",
         author: "AkHi",
         countDown: 5,
         role: 0,
         description: "Check current balance in a stylish text format",
-        category: "economy",
+        category: "game",
         guide: "{pn} or {pn} @tag"
     },
 
