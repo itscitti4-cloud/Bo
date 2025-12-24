@@ -4,7 +4,7 @@ module.exports = {
   config: {
     name: "crash",
     version: "2.0",
-    author: "Gemini",
+    author: "AkHi",
     countDown: 5,
     role: 0,
     shortDescription: "Bet and cash out before it crashes!",
