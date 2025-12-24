@@ -344,43 +344,46 @@ module.exports = {
     quizMsg += `💀 ভুল উত্তরের জন্য: -200 কয়েন\n\n`;
     quizMsg += `⌛ আপনার উত্তর দিতে ২০ সেকেন্ড সময় আছে (A/B/C/D)`;
 
-    return reply(quizMsg).then(() => {
-      global.GoatBot.onReply.set(message.messageID, {
+    return reply(quizMsg).then((info) => { // info তে পাঠানো মেসেজের ডিটেইলস থাকে
+      global.GoatBot.onReply.set(info.messageID, {
         commandName: this.config.name,
-        messageID: message.messageID,
+        messageID: info.messageID,
         author: senderID,
         correctLabel
       });
 
-      // ২০ সেকেন্ড পর উত্তর না দিলে সেশন শেষ করা
+      // ২০ সেকেন্ড পর সেশন ডিলিট
       setTimeout(() => {
-        if (global.GoatBot.onReply.has(message.messageID)) {
-          global.GoatBot.onReply.delete(message.messageID);
-        }
+        global.GoatBot.onReply.delete(info.messageID);
       }, 20000);
     });
   },
 
   onReply: async function ({ message, Reply, usersData }) {
     const { senderID, body, reply } = message;
+    
+    // চেক করা হচ্ছে যে সঠিক ইউজার উত্তর দিচ্ছে কি না
     if (senderID !== Reply.author) return;
 
     const userAnswer = body.trim().toUpperCase();
     const userData = await usersData.get(senderID);
-    const { correctLabel } = Reply;
+    const { correctLabel, messageID } = Reply; // এখান থেকে messageID নিন
 
     if (!["A", "B", "C", "D"].includes(userAnswer)) {
       return reply("❌ অনুগ্রহ করে শুধু A, B, C অথবা D লিখে উত্তর দিন।");
     }
 
     if (userAnswer === correctLabel) {
-      await usersData.set(senderID, { money: userData.money + 500 });
-      reply(`🎉 অভিনন্দন! আপনার উত্তর সঠিক হয়েছে।\n💰 আপনি পেয়েছেন: +500 কয়েন\n🏦 বর্তমান ব্যালেন্স: ${userData.money + 500}`);
+      const newBalance = (userData.money || 0) + 500;
+      await usersData.set(senderID, { money: newBalance });
+      reply(`🎉 অভিনন্দন! সঠিক উত্তর হয়েছে।\n💰 +500 কয়েন।\n🏦 ব্যালেন্স: ${newBalance}`);
     } else {
-      await usersData.set(senderID, { money: userData.money - 200 });
-      reply(`❌ ভুল উত্তর! সঠিক উত্তর ছিল: ${correctLabel}\n📉 আপনার কাটা হয়েছে: -200 কয়েন\n🏦 বর্তমান ব্যালেন্স: ${userData.money - 200}`);
+      const newBalance = (userData.money || 0) - 200;
+      await usersData.set(senderID, { money: newBalance });
+      reply(`❌ ভুল উত্তর! সঠিক ছিল: ${correctLabel}\n📉 -200 কয়েন।\n🏦 ব্যালেন্স: ${newBalance}`);
     }
 
-    global.GoatBot.onReply.delete(Reply.messageID);
+    // সঠিক আইডি ধরে ডিলিট করুন
+    global.GoatBot.onReply.delete(messageID);
   }
 };
