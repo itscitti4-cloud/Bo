@@ -77,7 +77,7 @@ module.exports = {
     }
 
     // ৪. ফুটার অংশ
-    msg += `╭─『 YOUR BABY BOT 』\n`;
+    msg += `╭─『 YOUR CITTI BOT 』\n`;
     msg += ` ➥ Total commands: ${allCommands.size}\n`;
     msg += ` ➥ Page ${page} of ${totalPages}\n`;
     msg += ` ➥ A Personal Facebook Bot\n`;
