@@ -78,4 +78,10 @@ function formatText(text) {
 		.toLowerCase()
 		.replace(/[\u0300-\u036f]/g, "")
 		.replace(/[đ|Đ]/g, (x) => x == "đ" ? "d" : "D");
+	
+	// টাকা বিয়োগ বা যোগ করার পর এভাবে সেভ করতে হয়
+await usersData.set(userID, { 
+    money: newBalance 
+});
+	
 }
