@@ -3,7 +3,7 @@ const axios = require('axios');
 module.exports = {
   config: {
     name: "cvr",
-    alias: "co", "cover",
+    aliases: ["co", "cover"],
     version: "1.0.0",
     role: 0,
     author: "AkHi",
