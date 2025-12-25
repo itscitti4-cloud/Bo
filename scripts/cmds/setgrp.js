@@ -1,19 +1,20 @@
 const axios = require("axios");
 const fs = require("fs-extra");
+const path = require("path");
 
 module.exports = {
   config: {
     name: "setgrp",
-    version: "2.0",
+    version: "2.1",
     author: "AkHi",
     countDown: 5,
-    role: 1, // Admin and Super Admin
+    role: 1, // 0 = All, 1 = Admin/Super Admin
     description: {
-      en: "Change group name, emoji, theme, and cover photo.",
+      "Change group name, emoji, theme, and cover photo.",
     },
     category: "Box",
     guide: {
-      en: "{p}setgrp [name] - Change group name\n" +
+          "{p}setgrp [name] - Change group name\n" +
           "{p}setgrp tm [reply to photo] - Set custom theme\n" +
           "{p}setgrp ej [emoji] - Set group emoji\n" +
           "{p}setgrp img [reply to photo] - Set group cover",
@@ -24,26 +25,31 @@ module.exports = {
     const { threadID, messageID, type, messageReply } = event;
     const action = args[0]?.toLowerCase();
 
+    // অ্যাডমিন চেক (বট অ্যাডমিন কি না তা নিশ্চিত করা)
+    const threadInfo = await api.getThreadInfo(threadID);
+    if (!threadInfo.adminIDs.some(item => item.id == api.getCurrentUserID())) {
+        return message.reply("❌ Bot must be an admin of this group to use this command.");
+    }
+
     try {
-      // 1. Set Group Name: !setgrp <name>
       if (!action) {
         return message.reply("Please provide a name or a valid sub-command (tm, ej, img).");
       }
 
+      // 1. Set Group Name: !setgrp <name>
       if (action !== "tm" && action !== "ej" && action !== "img") {
         const newName = args.join(" ");
         await api.setTitle(newName, threadID);
         return message.reply(`✅ Group name has been changed to: ${newName}`);
       }
 
-      // 2. Set Custom Theme: !setgrp tm (Reply to image)
+      // 2. Set Custom Theme (Background Photo): !setgrp tm (Reply to image)
       if (action === "tm") {
         if (type !== "message_reply" || !messageReply.attachments[0] || messageReply.attachments[0].type !== "photo") {
           return message.reply("Please reply to a photo to set it as a custom theme.");
         }
         const imgUrl = messageReply.attachments[0].url;
-        // Note: Messenger API has limitations on direct photo-to-theme, 
-        // this typically triggers the theme change flow if supported by your bot's FB version.
+        // থিম চেঞ্জ কিছু বটের ভার্সনে লিমিটেড হতে পারে
         await api.setThreadTheme(imgUrl, threadID); 
         return message.reply("✅ Custom theme has been applied successfully.");
       }
@@ -56,27 +62,35 @@ module.exports = {
         return message.reply(`✅ Group emoji has been changed to: ${emoji}`);
       }
 
-      // 4. Set Group Cover: !setgrp img (Reply to image)
+      // 4. Set Group Cover Photo: !setgrp img (Reply to image)
       if (action === "img") {
         if (type !== "message_reply" || !messageReply.attachments[0] || messageReply.attachments[0].type !== "photo") {
           return message.reply("Please reply to a photo to set it as the group cover.");
         }
 
         const imgUrl = messageReply.attachments[0].url;
-        const path = __dirname + `/cache/group_cover_${threadID}.png`;
+        const cacheDir = path.join(__dirname, "cache");
+        if (!fs.existsSync(cacheDir)) fs.mkdirSync(cacheDir);
+        
+        const filePath = path.join(cacheDir, `group_cover_${threadID}.png`);
         
         const response = await axios.get(imgUrl, { responseType: "arraybuffer" });
-        fs.writeFileSync(path, Buffer.from(response.data, "utf-8"));
+        fs.writeFileSync(filePath, Buffer.from(response.data, "utf-8"));
 
-        await api.changeGroupImage(fs.createReadStream(path), threadID);
-        fs.unlinkSync(path);
+        await api.changeGroupImage(fs.createReadStream(filePath), threadID);
+        
+        // ফাইল ডিলিট করার আগে সামান্য সময় অপেক্ষা (সেফটি)
+        setTimeout(() => { if(fs.existsSync(filePath)) fs.unlinkSync(filePath); }, 2000);
         
         return message.reply("✅ Group cover photo has been updated.");
       }
 
     } catch (error) {
       console.error(error);
-      return message.reply("❌ An error occurred! Make sure the bot is an admin of this group.");
+      // এরর মেসেজ আরও স্পষ্ট করা হয়েছে
+      let errorMsg = "❌ Failed to update. Possible reasons:\n1. Facebook restriction.\n2. Bot is not a proper admin.\n3. Theme/Title change limit reached.";
+      return message.reply(errorMsg);
     }
   }
 };
+
