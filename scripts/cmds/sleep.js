@@ -2,7 +2,7 @@ module.exports = {
   config: {
     name: "sleep",
     version: "1.1.0",
-    author: "AkHi / Gemini AI",
+    author: "AkHi",
     countDown: 5,
     role: 2, 
     description: "Turn off bot replies for 10 minutes in the current group",
