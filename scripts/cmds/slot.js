@@ -1,21 +1,18 @@
 module.exports = {
   config: {
     name: "slot",
-    version: "1.5",
+    version: "2.0",
     author: "AkHi",
     description: {
-      role: 2,
-      en: "Playing slot game",
+      role: 0,
+      en: "Playing slot game with stats tracking",
     },
     category: "Game",
   },
   langs: {
     en: {
-      invalid_amount: "Enter a valid amount of money to play",
-      not_enough_money: "Check your balance if you have that amount",
-      win_message: "You won $%1!",
-      lose_message: "You lost $%1!",
-      jackpot_message: "JACKPOT!! You won $%1 for five %2 symbols!",
+      invalid_amount: "• 𝙴𝚗𝚝𝚎𝚛 𝚊 𝚟𝚊𝚕𝚒𝚍 𝚊𝚖𝚘𝚞𝚗𝚝 𝚘𝚏 𝚖𝚘𝚗𝚎𝚢 𝚝𝚘 𝚙𝚕𝚊𝚢",
+      not_enough_money: "• 𝙲𝚑𝚎𝚌𝚔 𝚢𝚘𝚞𝚛 𝚋𝚊𝚕𝚊𝚗𝚌𝚎 𝚒𝚏 𝚢𝚘𝚞 𝚑𝚊𝚟𝚎 𝚝𝚑𝚊𝚝 𝚊𝚖𝚘𝚞𝚗𝚝",
     },
   },
   onStart: async function ({ args, message, event, usersData, getLang }) {
@@ -31,66 +28,57 @@ module.exports = {
       return message.reply(getLang("not_enough_money"));
     }
 
-    const slots = ["💚", "🧡", "❤️", "💜", "💙", "💛"];
-    const slot1 = slots[Math.floor(Math.random() * slots.length)];
-    const slot2 = slots[Math.floor(Math.random() * slots.length)];
-    const slot3 = slots[Math.floor(Math.random() * slots.length)];
-    const slot4 = slots[Math.floor(Math.random() * slots.length)];
-    const slot5 = slots[Math.floor(Math.random() * slots.length)];
+    // উইন রেট ক্যালকুলেশন এর জন্য ডেটা সেটআপ
+    if (!userData.data.slotStats) {
+      userData.data.slotStats = { win: 0, total: 0 };
+    }
 
-    const winnings = win(slot1, slot2, slot3, slot4, slot5, amount);
+    const slots = ["💚", "🧡", "❤️", "💜", "💙", "💛"];
+    const s = Array.from({ length: 5 }, () => slots[Math.floor(Math.random() * slots.length)]);
+
+    const winnings = win(s[0], s[1], s[2], s[3], s[4], amount);
+    
+    // স্ট্যাটাস আপডেট
+    userData.data.slotStats.total += 1;
+    if (winnings > 0) userData.data.slotStats.win += 1;
 
     await usersData.set(senderID, {
       money: userData.money + winnings,
       data: userData.data,
     });
 
-    const messageText = result(slot1, slot2, slot3, slot4, slot5, winnings, getLang);
-    return message.reply(messageText);
+    // ফরম্যাটিং ফাংশন
+    const bold = (text) => text.replace(/[A-Za-z0-9]/g, char => {
+      const charCode = char.charCodeAt(0);
+      if (charCode >= 65 && charCode <= 90) return String.fromCodePoint(0x1D5DA + charCode - 65);
+      if (charCode >= 97 && charCode <= 122) return String.fromCodePoint(0x1D5F4 + charCode - 97);
+      if (charCode >= 48 && charCode <= 57) return String.fromCodePoint(0x1D7CE + charCode - 48);
+      return char;
+    });
+
+    const winRate = ((userData.data.slotStats.win / userData.data.slotStats.total) * 100).toFixed(1);
+    const statsStr = `(${userData.data.slotStats.win}/${userData.data.slotStats.total})`;
+    const status = winnings > 0 ? "𝚠𝚒𝚗" : "𝚕𝚘𝚜𝚝";
+    
+    let msg = `• ${userData.name}, 𝚢𝚘𝚞 ${status} $${Math.abs(winnings)}\n`;
+    msg += `• 𝙶𝚊𝚖𝚎 𝚁𝚎𝚜𝚞𝚕𝚝𝚜: [ ${s[0]} | ${s[1]} | ${s[2]} | ${s[3]} | ${s[4]} ]\n`;
+    msg += `🎯 𝚆𝚒𝚗 𝚁𝚊𝚝𝚎: ${bold(winRate + "%")} ${bold(statsStr)}`;
+
+    return message.reply(msg);
   },
 };
 
-function win(slot1, slot2, slot3, slot4, slot5, betAmount) {
-  const isWin = Math.random() < 0.5; 
-  const slots = [slot1, slot2, slot3, slot4, slot5];
-  const uniqueSlots = new Set(slots);
-  const matchedCount = (slots.length - uniqueSlots.size) * 2;
-
-  if (slot1 === slot2 && slot2 === slot3 && slot3 === slot4 && slot4 === slot5) {
-    if (slot1 === "💚") return betAmount * 20;
-    if (slot1 === "💛") return betAmount * 15;
-    if (slot1 === "💙") return betAmount * 10;
-    return betAmount * 7;
+function win(s1, s2, s3, s4, s5, bet) {
+  const slots = [s1, s2, s3, s4, s5];
+  const unique = new Set(slots).size;
+  
+  // Jackpot: All 5 same
+  if (unique === 1) {
+    if (s1 === "💚") return bet * 20;
+    if (s1 === "💛") return bet * 15;
+    return bet * 10;
   }
-
-  if (isWin) {
-    return betAmount * (matchedCount > 0 ? matchedCount : 2);
-  } else {
-    return -betAmount;
-  }
-}
-
-function result(slot1, slot2, slot3, slot4, slot5, winnings, getLang) {
-  const bold = (text) =>
-    text
-      .replace(/[A-Z]/gi, (c) =>
-        String.fromCodePoint(
-          c.charCodeAt(0) + (c >= 'a' ? 119737 - 97 : 119743 - 65)
-        )
-      )
-      .replace(/\d/g, (d) =>
-        String.fromCodePoint(0x1d7ce + parseInt(d))
-      );
-
-  const slotLine = `🎰 [ ${slot1} | ${slot2} | ${slot3} | ${slot4} | ${slot5} ] 🎰`;
-
-  if (winnings > 0) {
-    if (slot1 === slot2 && slot2 === slot3 && slot3 === slot4 && slot4 === slot5) {
-      return `${bold(slotLine)}\n${bold(getLang("jackpot_message", winnings, slot1))}`;
-    } else {
-      return `${bold(slotLine)}\n${bold(getLang("win_message", winnings))}`;
-    }
-  } else {
-    return `${bold(slotLine)}\n${bold(getLang("lose_message", -winnings))}`;
-  }
+  
+  // Win or Lose logic
+  return Math.random() < 0.4 ? bet * (6 - unique) : -bet;
 }
