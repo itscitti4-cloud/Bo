@@ -1,11 +1,11 @@
 module.exports = {
   config: {
     name: "slot",
-    version: "1.6",
+    version: "1.9",
     author: "AkHi",
     description: {
       role: 0,
-      en: "Playing slot game with short number formatting",
+      en: "Playing slot game with custom typography and name display",
     },
     category: "Game",
   },
@@ -14,28 +14,26 @@ module.exports = {
     en: {
       invalid_amount: "Enter a valid amount of money to play",
       not_enough_money: "Check your balance if you have that amount",
-      win_message: "You won $%1!",
-      lose_message: "You lost $%1!",
-      jackpot_message: "JACKPOT!! You won $%1 for five %2 symbols!",
+      win_message: "𝚢𝚘𝚞 𝚠𝚘𝚗",
+      lose_message: "𝚢𝚘𝚞 𝚕𝚘𝚜𝚝",
+      jackpot_message: "𝙹𝙰𝙲𝙺𝙿𝙾𝚃!! 𝚢𝚘𝚞 𝚠𝚘𝚗",
     },
   },
 
   onStart: async function ({ args, message, event, usersData, getLang }) {
     const { senderID } = event;
     const userData = await usersData.get(senderID);
+    const userName = userData.name;
     
-    // ইনপুট হ্যান্ডলিং (1k, 1m ইত্যাদি সাপোর্ট করার জন্য)
-    let amount = args[0];
-    if (amount && (amount.toLowerCase().endsWith('k') || amount.toLowerCase().endsWith('m') || amount.toLowerCase().endsWith('b') || amount.toLowerCase().endsWith('t'))) {
-        const unit = amount.slice(-1).toLowerCase();
-        const value = parseFloat(amount);
-        if (unit === 'k') amount = value * 1000;
-        else if (unit === 'm') amount = value * 1000000;
-        else if (unit === 'b') amount = value * 1000000000;
-        else if (unit === 't') amount = value * 1000000000000;
-    } else {
-        amount = parseInt(amount);
-    }
+    // ইনপুট হ্যান্ডলিং
+    let amountStr = args[0] ? args[0].toLowerCase() : "";
+    let amount = 0;
+
+    if (amountStr.endsWith('k')) amount = parseFloat(amountStr) * 1000;
+    else if (amountStr.endsWith('m')) amount = parseFloat(amountStr) * 1000000;
+    else if (amountStr.endsWith('b')) amount = parseFloat(amountStr) * 1000000000;
+    else if (amountStr.endsWith('t')) amount = parseFloat(amountStr) * 1000000000000;
+    else amount = parseInt(amountStr);
 
     if (isNaN(amount) || amount <= 0) {
       return message.reply(getLang("invalid_amount"));
@@ -46,75 +44,68 @@ module.exports = {
     }
 
     const slots = ["💚", "🧡", "❤️", "💜", "💙", "💛"];
-    const s1 = slots[Math.floor(Math.random() * slots.length)];
-    const s2 = slots[Math.floor(Math.random() * slots.length)];
-    const s3 = slots[Math.floor(Math.random() * slots.length)];
-    const s4 = slots[Math.floor(Math.random() * slots.length)];
-    const s5 = slots[Math.floor(Math.random() * slots.length)];
+    const s = Array.from({ length: 5 }, () => slots[Math.floor(Math.random() * slots.length)]);
 
-    const winnings = calculateWinnings(s1, s2, s3, s4, s5, amount);
+    const winnings = calculateWinnings(s, amount);
 
     await usersData.set(senderID, {
       money: userData.money + winnings,
       data: userData.data,
     });
 
-    const msg = formatResult(s1, s2, s3, s4, s5, winnings, getLang);
+    const msg = formatResult(userName, s, winnings, getLang);
     return message.reply(msg);
   },
 };
 
-// সংখ্যাকে K, M, B, T তে কনভার্ট করার ফাংশন
+// সংখ্যা সংক্ষেপ করার ফাংশন
 function formatNumber(num) {
   if (num < 1000) return num.toString();
   const units = ["K", "M", "B", "T"];
   let unitIndex = -1;
   let value = Math.abs(num);
-
   while (value >= 1000 && unitIndex < units.length - 1) {
     value /= 1000;
     unitIndex++;
   }
-
-  return (num < 0 ? "-" : "") + value.toFixed(2).replace(/\.00$/, "") + units[unitIndex];
+  return value.toFixed(1).replace(/\.0$/, "") + units[unitIndex];
 }
 
-function calculateWinnings(s1, s2, s3, s4, s5, bet) {
-  if (s1 === s2 && s2 === s3 && s3 === s4 && s4 === s5) {
-    if (s1 === "💚") return bet * 20;
-    if (s1 === "💛") return bet * 15;
-    if (s1 === "💙") return bet * 10;
-    return bet * 7;
+function calculateWinnings(s, bet) {
+  if (s.every(val => val === s[0])) {
+    const multipliers = { "💚": 20, "💛": 15, "💙": 10 };
+    return bet * (multipliers[s[0]] || 7);
   }
-
-  const isWin = Math.random() < 0.45; // জয়ের সম্ভাবনা ৪৫%
+  const isWin = Math.random() < 0.40;
   if (isWin) {
-    const unique = new Set([s1, s2, s3, s4, s5]);
-    const matchedCount = (5 - unique.size) * 2;
+    const uniqueCount = new Set(s).size;
+    const matchedCount = (5 - uniqueCount) * 2;
     return bet * (matchedCount > 0 ? matchedCount : 2);
-  } else {
-    return -bet;
   }
+  return -bet;
 }
 
-function formatResult(s1, s2, s3, s4, s5, winnings, getLang) {
-  const bold = (text) =>
-    text
-      .replace(/[A-Z]/gi, (c) =>
-        String.fromCodePoint(c.charCodeAt(0) + (c >= "a" ? 119737 - 97 : 119743 - 65))
-      )
-      .replace(/\d/g, (d) => String.fromCodePoint(0x1d7ce + parseInt(d)));
-
-  const slotLine = `🎰 [ ${s1} | ${s2} | ${s3} | ${s4} | ${s5} ] 🎰`;
+function formatResult(name, s, winnings, getLang) {
   const formattedWinnings = formatNumber(Math.abs(winnings));
+  const isJackpot = s.every(val => val === s[0]);
+  
+  // সংখ্যাকে বোল্ড (𝟎-𝟗) করার ফাংশন
+  const toBoldNum = (num) => {
+    const dict = { '0': '𝟎', '1': '𝟏', '2': '𝟐', '3': '𝟑', '4': '𝟒', '5': '𝟓', '6': '𝟔', '7': '𝟕', '8': '𝟖', '9': '𝟗', '.': '.', '%': '%' };
+    return String(num).split('').map(c => dict[c] || c).join('');
+  };
 
-  if (winnings > 0) {
-    const isJackpot = s1 === s2 && s2 === s3 && s3 === s4 && s4 === s5;
-    const text = isJackpot 
-      ? getLang("jackpot_message", formattedWinnings, s1) 
-      : getLang("win_message", formattedWinnings);
-    return `${bold(slotLine)}\n${bold(text)}`;
-  } else {
-    return `${bold(slotLine)}\n${bold(getLang("lose_message", formattedWinnings))}`;
-  }
+  let statusText = winnings > 0 
+    ? (isJackpot ? getLang("jackpot_message") : getLang("win_message")) 
+    : getLang("lose_message");
+
+  const resultLine = `• ${name}, ${statusText} $${formattedWinnings}`;
+  const slotLine = `• 𝙶𝚊𝚖𝚎 𝚁𝚎𝚜𝚞𝚕𝚝𝚜: [ ${s[0]} | ${s[1]} | ${s[2]} | ${s[3]} | ${s[4]} ]`;
+  
+  // ডাইনামিক উইন রেট ক্যালকুলেশন (জেতার ওপর ভিত্তি করে)
+  const ratePercent = winnings > 0 ? toBoldNum("100.0%") : toBoldNum("0.0%");
+  const rateRatio = winnings > 0 ? "১/১" : toBoldNum("0/2");
+  const winRateLine = `🎯 𝚆𝚒𝚗 𝚁𝚊𝚝𝚎: ${ratePercent} (${rateRatio})`;
+
+  return `${resultLine}\n${slotLine}\n${winRateLine}`;
 }
