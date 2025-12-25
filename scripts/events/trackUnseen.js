@@ -3,6 +3,8 @@ module.exports = {
     name: "trackUnseen",
     version: "1.0",
     author: "AkHi",
+    description: "user and thread all record",
+    category: "events",
   },
   onStart: async function ({ event, usersData }) {
     const { senderID, body, type } = event;
