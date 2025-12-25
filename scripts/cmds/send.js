@@ -1,4 +1,4 @@
-module.exports = {
+Module.exports = {
     config: {
         name: "send",
         aliases: ["pay", "transfer"],
@@ -18,18 +18,27 @@ module.exports = {
         let targetID;
         let amount;
 
+        // টাকার সংখ্যা ফরম্যাট করার ফাংশন
+        const formatMoney = (n) => {
+            const num = Math.abs(n);
+            if (num >= 1e12) return (n / 1e12).toFixed(1).replace(/\.0$/, '') + 'T';
+            if (num >= 1e9) return (n / 1e9).toFixed(1).replace(/\.0$/, '') + 'B';
+            if (num >= 1e6) return (n / 1e6).toFixed(1).replace(/\.0$/, '') + 'M';
+            if (num >= 1e3) return (n / 1e3).toFixed(1).replace(/\.0$/, '') + 'K';
+            return n.toString();
+        };
+
         // ১. রিপ্লাই এর মাধ্যমে পাঠানো
         if (type == "message_reply") {
             targetID = event.messageReply.senderID;
             amount = parseInt(args[0]);
         } 
-        // ২. মেনশন এর মাধ্যমে পাঠানো (যেমন: !send 500 @tag)
+        // ২. মেনশন এর মাধ্যমে পাঠানো
         else if (Object.keys(mentions).length > 0) {
             targetID = Object.keys(mentions)[0];
-            // আর্গুমেন্ট থেকে শুধু সংখ্যাটি খুঁজে বের করা
             amount = parseInt(args.find(a => !isNaN(a)));
         } 
-        // ৩. সরাসরি UID এর মাধ্যমে পাঠানো (যেমন: !send 1000xxx 500)
+        // ৩. সরাসরি UID এর মাধ্যমে পাঠানো
         else if (args.length >= 2 && !isNaN(args[0])) {
             targetID = args[0];
             amount = parseInt(args[1]);
@@ -54,14 +63,14 @@ module.exports = {
             const currentMoney = senderData.money || 0;
 
             if (amount > currentMoney) 
-                return message.reply(`🚫 | 𝐈𝐧𝐬𝐮𝐟𝐟𝐢𝐜𝐢𝐞𝐧𝐭 𝐁𝐚𝐥𝐚𝐧𝐜𝐞! 𝐘𝐨𝐮 𝐡𝐚𝐯𝐞 𝐨𝐧𝐥𝐲 $${currentMoney.toLocaleString()}`);
+                return message.reply(`🚫 | 𝐈𝐧𝐬𝐮𝐟𝐟𝐢𝐜𝐢𝐞𝐧𝐭 𝐁𝐚𝐥𝐚𝐧𝐜𝐞! 𝐘𝐨𝐮 𝐡𝐚𝐯𝐞 𝐨𝐧𝐥𝐲 $${formatMoney(currentMoney)}`);
 
             // টাকা আদান-প্রদান এবং ডাটাবেসে সেভ করা
             await usersData.set(senderID, { money: currentMoney - amount });
             await usersData.set(targetID, { money: (targetData.money || 0) + amount });
 
             return message.reply({
-                body: `✅ 𝐓𝐫𝐚𝐧𝐬𝐚𝐜𝐭𝐢𝐨𝐧 𝐒𝐮𝐜𝐜𝐞𝐬𝐬𝐟𝐮𝐥\n━━━━━━━━━━━━━━━━━━\n👤 𝐓𝐨: ${targetData.name}\n🆔 𝐈𝐃: ${targetID}\n💰 𝐀𝐦𝐨𝐮𝐧𝐭: ${amount.toLocaleString()}$\n🎊 𝐒𝐭𝐚𝐭𝐮𝐬: Completed\n━━━━━━━━━━━━━━━━━━\n✨ 𝐓𝐡𝐚𝐧𝐤 𝐲𝐨𝐮 𝐟𝐨𝐫 𝐮𝐬𝐢𝐧𝐠 𝐨𝐮𝐫 𝐬𝐞𝐫𝐯𝐢𝐜𝐞!`
+                body: `✅ 𝐓𝐫𝐚𝐧𝐬𝐚𝐜𝐭𝐢𝐨𝐧 𝐒𝐮𝐜𝐜𝐞𝐬𝐬𝐟𝐮𝐥\n━━━━━━━━━━━━━━━━━━\n👤 𝐓𝐨: ${targetData.name}\n🆔 𝐈𝐃: ${targetID}\n💰 𝐀𝐦𝐨𝐮𝐧𝐭: ${formatMoney(amount)}$\n🎊 𝐒𝐭𝐚𝐭𝐮𝐬: Completed\n━━━━━━━━━━━━━━━━━━\n✨ 𝐓𝐡𝐚𝐧𝐤 𝐲𝐨𝐮 𝐟𝐨𝐫 𝐮𝐬𝐢𝐧𝐠 𝐨𝐮𝐫 𝐬𝐞𝐫𝐯𝐢𝐜𝐞!`
             });
 
         } catch (error) {
@@ -70,3 +79,4 @@ module.exports = {
         }
     }
 };
+            
