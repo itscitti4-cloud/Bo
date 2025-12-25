@@ -1,8 +1,8 @@
 const mongoose = require("mongoose");
 
 module.exports = async function (uriConnect) {
-    // সরাসরি আপনার লিঙ্কটি ব্যবহার করা হয়েছে
-    const mongoURI = "mongodb+srv://shahryarsabu_db_user:8wKHzzXFdeX3zlEK@cluster0.rbclxsq.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0";
+    // আপনার স্ক্রিনশট থেকে সংগৃহীত চূড়ান্ত এবং সঠিক লিঙ্ক
+    const mongoURI = "mongodb+srv://shahryarsabu_db_user:7jYCAFNDGkemgYQI@cluster0.rbclxsq.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0";
 
     const threadModel = require("../models/mongodb/thread.js");
     const userModel = require("../models/mongodb/user.js");
@@ -10,11 +10,12 @@ module.exports = async function (uriConnect) {
     const globalModel = require("../models/mongodb/global.js");
 
     try {
-        // এখানে পুরনো অপশনগুলো (useNewUrlParser ইত্যাদি) সরিয়ে দেওয়া হয়েছে
+        // কানেক্ট করার সময় কোনো অতিরিক্ত অপশন (useNewUrlParser ইত্যাদি) ব্যবহার করা হয়নি
         await mongoose.connect(mongoURI);
         
         console.log("✅ [DATABASE] MongoDB Cloud Connected Successfully!");
     } catch (error) {
+        // যদি এখনও এরর আসে তবে সেটি এখানে দেখাবে
         console.error("❌ [DATABASE] MongoDB Connection Error: ", error.message);
     }
 
