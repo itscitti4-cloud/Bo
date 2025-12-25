@@ -1,10 +1,10 @@
 module.exports = {
   config: {
     name: "slot",
-    version: "2.0",
+    version: "2.1",
     author: "AkHi",
     role: 0,
-    description: "Playing slot game with real win-rate statistics",
+    description: "Playing slot game",
     category: "Game",
   },
 
@@ -13,13 +13,12 @@ module.exports = {
     const userData = await usersData.get(senderID);
     const userName = userData.name;
     
-    // ডাটাবেস থেকে স্ট্যাটাস নেওয়া
-    let stats = userData.data.slotStats || { totalPlays: 0, totalWins: 0 };
+    // ডাটাবেস থেকে স্ট্যাটাস নেওয়া এবং নিশ্চিত করা যেন undefined না থাকে
+    let stats = (userData.data && userData.data.slotStats) ? userData.data.slotStats : { totalPlays: 0, totalWins: 0 };
     
     let amountStr = args[0] ? args[0].toLowerCase() : "";
     let amount = 0;
 
-    // সংখ্যা হ্যান্ডলিং (k, m, b, t)
     if (amountStr.endsWith('k')) amount = parseFloat(amountStr) * 1000;
     else if (amountStr.endsWith('m')) amount = parseFloat(amountStr) * 1000000;
     else if (amountStr.endsWith('b')) amount = parseFloat(amountStr) * 1000000000;
@@ -40,8 +39,12 @@ module.exports = {
     const winnings = calculateWinnings(s, amount);
 
     // স্ট্যাটিস্টিকস আপডেট
-    stats.totalPlays += 1;
-    if (winnings > 0) stats.totalWins += 1;
+    stats.totalPlays = (stats.totalPlays || 0) + 1;
+    if (winnings > 0) {
+      stats.totalWins = (stats.totalWins || 0) + 1;
+    } else {
+      stats.totalWins = stats.totalWins || 0; // হারলে আগেরটাই থাকবে
+    }
 
     // ডাটাবেসে সেভ
     await usersData.set(senderID, {
@@ -67,13 +70,11 @@ function formatNumber(num) {
 }
 
 function calculateWinnings(s, bet) {
-  // যদি সব কয়টি ইমোজি মিলে যায় (Jackpot)
   if (s.every(val => val === s[0])) {
     const multipliers = { "💚": 20, "💛": 15, "💙": 10 };
     return bet * (multipliers[s[0]] || 7);
   }
   
-  // সাধারণ জয়ের সম্ভাবনা (৪০%)
   const isWin = Math.random() < 0.40;
   if (isWin) {
     const uniqueCount = new Set(s).size;
@@ -96,14 +97,18 @@ function formatResult(name, s, winnings, stats) {
     ? (isJackpot ? "𝙹𝙰𝙲𝙺𝙿𝙾𝚃!! 𝚢𝚘𝚞 𝚠𝚘𝚗" : "𝚢𝚘𝚞 𝚠𝚘𝚗") 
     : "𝚢𝚘𝚞 𝚕𝚘𝚜𝚝";
 
-  // উইন রেট ক্যালকুলেশন
-  const winPercent = ((stats.totalWins / stats.totalPlays) * 100).toFixed(1);
+  // নিরাপদ ক্যালকুলেশন (NaN রোধ করতে)
+  const totalPlays = stats.totalPlays || 1;
+  const totalWins = stats.totalWins || 0;
+  const winPercent = ((totalWins / totalPlays) * 100).toFixed(1);
+  
   const ratePercent = toBoldNum(winPercent + "%");
-  const rateRatio = toBoldNum(`${stats.totalWins}/${stats.totalPlays}`);
+  const rateRatio = toBoldNum(`${totalWins}/${totalPlays}`);
 
   const resultLine = `• ${name}, ${statusText} $${formattedWinnings}`;
   const slotLine = `• 𝙶𝚊𝚖𝚎 𝚁𝚎𝚜𝚞𝚕𝚝𝚜: [ ${s[0]} | ${s[1]} | ${s[2]} | ${s[3]} | ${s[4]} ]`;
   const winRateLine = `🎯 𝚆𝚒𝚗 𝚁𝚊𝚝𝚎: ${ratePercent} (${rateRatio})`;
 
   return `${resultLine}\n${slotLine}\n${winRateLine}`;
-}
+    }
+                                                            
