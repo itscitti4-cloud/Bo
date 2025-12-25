@@ -1,39 +1,25 @@
 module.exports = {
 	config: {
 		name: "refresh",
-		version: "1.2",
-		author: "NTKhang",
+		version: "1.3",
+		author: "AkHi",
 		countDown: 60,
-		role: 0,
+		role: 2,
 		description: {
-			vi: "làm mới thông tin nhóm chat hoặc người dùng",
-			en: "refresh information of group chat or user"
+			"refresh information of group chat, user or commands"
 		},
 		category: "box chat",
 		guide: {
-			vi: "   {pn} [thread | group]: làm mới thông tin nhóm chat của bạn"
-				+ "\n   {pn} group <threadID>: làm mới thông tin nhóm chat theo ID"
-				+ "\n\n   {pn} user: làm mới thông tin người dùng của bạn"
-				+ "\n   {pn} user [<userID> | @tag]: làm mới thông tin người dùng theo ID",
-			en: "   {pn} [thread | group]: refresh information of your group chat"
+			      "{pn} [thread | group]: refresh information of your group chat"
 				+ "\n   {pn} group <threadID>: refresh information of group chat by ID"
-				+ "\n\n   {pn} user: refresh information of your user"
+				+ "\n   {pn} user: refresh information of your user"
 				+ "\n   {pn} user [<userID> | @tag]: refresh information of user by ID"
+				+ "\n   {pn} cmd <command name>: refresh a specific command"
+				+ "\n   {pn} cmd all: refresh all commands"
 		}
 	},
 
-	langs: {
-		vi: {
-			refreshMyThreadSuccess: "✓ | Đã làm mới thông tin nhóm chat của bạn thành công!",
-			refreshThreadTargetSuccess: "✓ | Đã làm mới thông tin nhóm chat %1 thành công!",
-			errorRefreshMyThread: "✗ | Đã xảy ra lỗi không thể làm mới thông tin nhóm chat của bạn",
-			errorRefreshThreadTarget: "✗ | Đã xảy ra lỗi không thể làm mới thông tin nhóm chat %1",
-			refreshMyUserSuccess: "✓ | Đã làm mới thông tin người dùng của bạn thành công!",
-			refreshUserTargetSuccess: "✓ | Đã làm mới thông tin người dùng %1 thành công!",
-			errorRefreshMyUser: "✗ | Đã xảy ra lỗi không thể làm mới thông tin người dùng của bạn",
-			errorRefreshUserTarget: "✗ | Đã xảy ra lỗi không thể làm mới thông tin người dùng %1"
-		},
-		en: {
+	    {
 			refreshMyThreadSuccess: "✓ | Refresh information of your group chat successfully!",
 			refreshThreadTargetSuccess: "✓ | Refresh information of group chat %1 successfully!",
 			errorRefreshMyThread: "✗ | Error when refresh information of your group chat",
@@ -41,38 +27,71 @@ module.exports = {
 			refreshMyUserSuccess: "✓ | Refresh information of your user successfully!",
 			refreshUserTargetSuccess: "✓ | Refresh information of user %1 successfully!",
 			errorRefreshMyUser: "✗ | Error when refresh information of your user",
-			errorRefreshUserTarget: "✗ | Error when refresh information of user %1"
+			errorRefreshUserTarget: "✗ | Error when refresh information of user %1",
+			refreshCmdSuccess: "✓ | Refresh command '%1' successfully!",
+			refreshAllCmdSuccess: "✓ | Refresh all commands successfully!",
+			errorRefreshCmd: "✗ | Command '%1' not found or error when refresh"
 		}
 	},
 
-	onStart: async function ({ args, threadsData, message, event, usersData, getLang }) {
+	onStart: async function ({ args, threadsData, message, event, usersData, getLang, client }) {
+		const { threadID, senderID, mentions } = event;
+
+		// Refresh Group/Thread Info
 		if (args[0] == "group" || args[0] == "thread") {
-			const targetID = args[1] || event.threadID;
+			const targetID = args[1] || threadID;
 			try {
 				await threadsData.refreshInfo(targetID);
-				return message.reply(targetID == event.threadID ? getLang("refreshMyThreadSuccess") : getLang("refreshThreadTargetSuccess", targetID));
+				return message.reply(targetID == threadID ? getLang("refreshMyThreadSuccess") : getLang("refreshThreadTargetSuccess", targetID));
 			}
 			catch (error) {
-				return message.reply(targetID == event.threadID ? getLang("errorRefreshMyThread") : getLang("errorRefreshThreadTarget", targetID));
+				return message.reply(targetID == threadID ? getLang("errorRefreshMyThread") : getLang("errorRefreshThreadTarget", targetID));
 			}
 		}
+
+		// Refresh User Info
 		else if (args[0] == "user") {
-			let targetID = event.senderID;
+			let targetID = senderID;
 			if (args[1]) {
-				if (Object.keys(event.mentions).length)
-					targetID = Object.keys(event.mentions)[0];
+				if (Object.keys(mentions).length)
+					targetID = Object.keys(mentions)[0];
 				else
 					targetID = args[1];
 			}
 			try {
 				await usersData.refreshInfo(targetID);
-				return message.reply(targetID == event.senderID ? getLang("refreshMyUserSuccess") : getLang("refreshUserTargetSuccess", targetID));
+				return message.reply(targetID == senderID ? getLang("refreshMyUserSuccess") : getLang("refreshUserTargetSuccess", targetID));
 			}
 			catch (error) {
-				return message.reply(targetID == event.senderID ? getLang("errorRefreshMyUser") : getLang("errorRefreshUserTarget", targetID));
+				return message.reply(targetID == senderID ? getLang("errorRefreshMyUser") : getLang("errorRefreshUserTarget", targetID));
 			}
 		}
-		else
-			message.SyntaxError();
+
+		// Refresh Commands (Added Part)
+		else if (args[0] == "cmd") {
+			const cmdName = args[1];
+			if (!cmdName) return message.SyntaxError();
+
+			if (cmdName.toLowerCase() == "all") {
+				try {
+					await client.loadAllCommand();
+					return message.reply(getLang("refreshAllCmdSuccess"));
+				} catch (e) {
+					return message.reply("✗ | Failed to refresh all commands.");
+				}
+			} else {
+				try {
+					const command = client.commands.get(cmdName) || client.commands.get(client.aliases.get(cmdName));
+					if (!command) return message.reply(getLang("errorRefreshCmd", cmdName));
+					
+					await client.loadCommand(command.config.name);
+					return message.reply(getLang("refreshCmdSuccess", cmdName));
+				} catch (e) {
+					return message.reply(getLang("errorRefreshCmd", cmdName));
+				}
+			}
+		}
+		
+		else message.SyntaxError();
 	}
 };
