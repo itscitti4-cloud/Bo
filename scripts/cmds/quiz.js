@@ -321,70 +321,69 @@ module.exports = {
       { q: "বাংলাদেশের বৃহত্তম হাওড় হাকালুকি কোন জেলায়?", a: "মৌলভীবাজার", options: ["সিলেট", "মৌলভীবাজার", "সুনামগঞ্জ", "হবিগঞ্জ"] }
       ];
 
-const randomQuiz = questions[Math.floor(Math.random() * questions.length)];
-const { q, options, a: ans } = randomQuiz;
+    const randomQuiz = questions[Math.floor(Math.random() * questions.length)];
+    const { q, options, a: ans } = randomQuiz;
 
-// সঠিক উত্তরের ইনডেক্স থেকে লেবেল (A, B, C, D) বের করা
-const labels = ["A", "B", "C", "D"];
-const correctOptionLabel = labels[options.indexOf(ans)];
+    // সঠিক উত্তরের লেবেল (A, B, C, D) বের করা
+    const labels = ["A", "B", "C", "D"];
+    const correctOptionLabel = labels[options.indexOf(ans)];
 
-const quizMsg = `╭───✦ [ 𝗕𝗗 𝗤𝗨𝗜𝗭 ]\n` +
-  `├‣ প্রশ্ন: ${q}\n` +
-  `│\n` +
-  `├‣ A. ${options[0]}\n` +
-  `├‣ B. ${options[1]}\n` +
-  `├‣ C. ${options[2]}\n` +
-  `├‣ D. ${options[3]}\n` +
-  `╰──────────────◊\n\n` +
-  `👉 সঠিক উত্তর দিতে A, B, C অথবা D লিখে এই মেসেজে রিপ্লাই দিন।\n` +
-  `⏰ আপনার কাছে ২০ সেকেন্ড সময় আছে।`;
+    const quizMsg = `╭───✦ [ 𝗕𝗗 𝗤𝗨𝗜𝗭 ]\n` +
+      `├‣ প্রশ্ন: ${q}\n` +
+      `│\n` +
+      `├‣ A. ${options[0]}\n` +
+      `├‣ B. ${options[1]}\n` +
+      `├‣ C. ${options[2]}\n` +
+      `├‣ D. ${options[3]}\n` +
+      `╰──────────────◊\n\n` +
+      `👉 সঠিক উত্তর দিতে A, B, C অথবা D লিখে রিপ্লাই দিন।\n` +
+      `⏰ আপনার কাছে ২০ সেকেন্ড সময় আছে।`;
 
-return api.sendMessage(quizMsg, threadID, (err, info) => {
-  if (err) return;
+    return api.sendMessage(quizMsg, threadID, (err, info) => {
+      if (err) return;
 
-  global.GoatBot.onReply.set(info.messageID, {
-    commandName: this.config.name,
-    messageID: info.messageID,
-    author: senderID,
-    correctLabel: correctOptionLabel, // এখানে এখন "A" অথবা "B" ইত্যাদি জমা থাকবে
-    actualAnswer: ans // সঠিক উত্তরটি টেক্সট হিসেবে রাখা হলো দেখানোর জন্য
-  });
+      global.GoatBot.onReply.set(info.messageID, {
+        commandName: this.config.name,
+        messageID: info.messageID,
+        author: senderID,
+        correctLabel: correctOptionLabel,
+        actualAnswer: ans
+      });
 
-  setTimeout(() => {
-    if (global.GoatBot.onReply.has(info.messageID)) {
-      global.GoatBot.onReply.delete(info.messageID);
+      setTimeout(() => {
+        if (global.GoatBot.onReply.has(info.messageID)) {
+          global.GoatBot.onReply.delete(info.messageID);
+        }
+      }, 20000);
+    }, messageID);
+  },
+
+  onReply: async function ({ api, event, Reply, usersData }) {
+    const { senderID, body, messageID, threadID } = event;
+
+    if (senderID !== Reply.author) return;
+
+    const userAnswer = body.trim().toUpperCase();
+    const { correctLabel, actualAnswer } = Reply;
+
+    if (!["A", "B", "C", "D"].includes(userAnswer)) {
+      return api.sendMessage("❌ অনুগ্রহ করে শুধু A, B, C অথবা D লিখে রিপ্লাই দিন।", threadID, messageID);
     }
-  }, 20000);
-}, messageID);
 
-// ... onReply ফাংশন ...
-onReply: async function ({ api, event, Reply, usersData }) {
-  const { senderID, body, messageID, threadID } = event;
+    const userData = await usersData.get(senderID);
+    let currentMoney = userData.money || 0;
 
-  if (senderID !== Reply.author) return;
+    if (userAnswer === correctLabel) {
+      currentMoney += 500;
+      await usersData.set(senderID, { money: currentMoney });
+      api.sendMessage(`🎉 অভিনন্দন! সঠিক উত্তর হয়েছে।\n💰 +500 কয়েন যোগ হয়েছে।\n🏦 বর্তমান ব্যালেন্স: ${currentMoney}`, threadID, messageID);
+    } else {
+      currentMoney -= 200;
+      if (currentMoney < 0) currentMoney = 0;
+      await usersData.set(senderID, { money: currentMoney });
+      api.sendMessage(`❌ ভুল উত্তর! সঠিক উত্তর ছিল: ${correctLabel} (${actualAnswer})\n📉 -200 কয়েন কাটা হয়েছে।\n🏦 বর্তমান ব্যালেন্স: ${currentMoney}`, threadID, messageID);
+    }
 
-  const userAnswer = body.trim().toUpperCase();
-  const { correctLabel, actualAnswer } = Reply; // correctLabel এখন "A"/"B"/"C"/"D"
-
-  if (!["A", "B", "C", "D"].includes(userAnswer)) {
-    return api.sendMessage("❌ অনুগ্রহ করে শুধু A, B, C অথবা D লিখে রিপ্লাই দিন।", threadID, messageID);
+    global.GoatBot.onReply.delete(Reply.messageID);
   }
-
-  const userData = await usersData.get(senderID);
-  let currentMoney = userData.money || 0;
-
-  if (userAnswer === correctLabel) {
-    currentMoney += 500;
-    await usersData.set(senderID, { money: currentMoney });
-    api.sendMessage(`🎉 অভিনন্দন! সঠিক উত্তর হয়েছে।\n💰 +500 কয়েন যোগ হয়েছে।\n🏦 বর্তমান ব্যালেন্স: ${currentMoney}`, threadID, messageID);
-  } else {
-    currentMoney -= 200;
-    if (currentMoney < 0) currentMoney = 0;
-    await usersData.set(senderID, { money: currentMoney });
-    // এখানে correctLabel এবং actualAnswer দুটোই দেখানো হয়েছে স্বচ্ছতার জন্য
-    api.sendMessage(`❌ ভুল উত্তর! সঠিক উত্তর ছিল: ${correctLabel} (${actualAnswer})\n📉 -200 কয়েন কাটা হয়েছে।\n🏦 বর্তমান ব্যালেন্স: ${currentMoney}`, threadID, messageID);
-  }
-
-  global.GoatBot.onReply.delete(Reply.messageID);
-}
-    
+};
