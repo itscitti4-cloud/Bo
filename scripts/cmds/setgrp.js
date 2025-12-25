@@ -9,29 +9,25 @@ module.exports = {
     author: "AkHi",
     countDown: 5,
     role: 1, // 0 = All, 1 = Admin/Super Admin
-    description: {
-      "Change group name, emoji, theme, and cover photo.",
-    },
+    description: "Change group name, emoji, theme, and cover photo.",
     category: "Box",
-    guide: {
-          "{p}setgrp [name] - Change group name\n" +
+    guide: "{p}setgrp [name] - Change group name\n" +
           "{p}setgrp tm [reply to photo] - Set custom theme\n" +
           "{p}setgrp ej [emoji] - Set group emoji\n" +
-          "{p}setgrp img [reply to photo] - Set group cover",
-    }
+          "{p}setgrp img [reply to photo] - Set group cover"
   },
 
   onStart: async function ({ api, event, args, message }) {
     const { threadID, messageID, type, messageReply } = event;
     const action = args[0]?.toLowerCase();
 
-    // অ্যাডমিন চেক (বট অ্যাডমিন কি না তা নিশ্চিত করা)
-    const threadInfo = await api.getThreadInfo(threadID);
-    if (!threadInfo.adminIDs.some(item => item.id == api.getCurrentUserID())) {
-        return message.reply("❌ Bot must be an admin of this group to use this command.");
-    }
-
     try {
+      // বট অ্যাডমিন কি না চেক করা
+      const threadInfo = await api.getThreadInfo(threadID);
+      if (!threadInfo.adminIDs.some(item => item.id == api.getCurrentUserID())) {
+        return message.reply("❌ Bot must be an admin of this group to use this command.");
+      }
+
       if (!action) {
         return message.reply("Please provide a name or a valid sub-command (tm, ej, img).");
       }
@@ -43,13 +39,12 @@ module.exports = {
         return message.reply(`✅ Group name has been changed to: ${newName}`);
       }
 
-      // 2. Set Custom Theme (Background Photo): !setgrp tm (Reply to image)
+      // 2. Set Custom Theme: !setgrp tm (Reply to image)
       if (action === "tm") {
         if (type !== "message_reply" || !messageReply.attachments[0] || messageReply.attachments[0].type !== "photo") {
           return message.reply("Please reply to a photo to set it as a custom theme.");
         }
         const imgUrl = messageReply.attachments[0].url;
-        // থিম চেঞ্জ কিছু বটের ভার্সনে লিমিটেড হতে পারে
         await api.setThreadTheme(imgUrl, threadID); 
         return message.reply("✅ Custom theme has been applied successfully.");
       }
@@ -79,7 +74,6 @@ module.exports = {
 
         await api.changeGroupImage(fs.createReadStream(filePath), threadID);
         
-        // ফাইল ডিলিট করার আগে সামান্য সময় অপেক্ষা (সেফটি)
         setTimeout(() => { if(fs.existsSync(filePath)) fs.unlinkSync(filePath); }, 2000);
         
         return message.reply("✅ Group cover photo has been updated.");
@@ -87,10 +81,7 @@ module.exports = {
 
     } catch (error) {
       console.error(error);
-      // এরর মেসেজ আরও স্পষ্ট করা হয়েছে
-      let errorMsg = "❌ Failed to update. Possible reasons:\n1. Facebook restriction.\n2. Bot is not a proper admin.\n3. Theme/Title change limit reached.";
-      return message.reply(errorMsg);
+      return message.reply("❌ Failed to update. Ensure the bot is admin and not restricted by Facebook.");
     }
   }
 };
-
