@@ -322,7 +322,7 @@ module.exports = {
       ];
 
 const randomQuiz = questions[Math.floor(Math.random() * questions.length)];
-    const { q, options, ans } = randomQuiz;
+    const { q, options, a: ans } = randomQuiz;
 
     const quizMsg = `╭───✦ [ 𝗕𝗗 𝗤𝗨𝗜𝗭 ]\n` +
       `├‣ প্রশ্ন: ${q}\n` +
