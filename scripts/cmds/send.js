@@ -18,14 +18,23 @@ module.exports = {
         let targetID;
         let amount;
 
-        // টাকার সংখ্যা ফরম্যাট করার ফাংশন
+        // ফরম্যাট মানি ফাংশন
         const formatMoney = (n) => {
             const num = Math.abs(n);
+            if (num >= 1e15) return (n / 1e15).toFixed(1).replace(/\.0$/, '') + 'Q';
             if (num >= 1e12) return (n / 1e12).toFixed(1).replace(/\.0$/, '') + 'T';
             if (num >= 1e9) return (n / 1e9).toFixed(1).replace(/\.0$/, '') + 'B';
             if (num >= 1e6) return (n / 1e6).toFixed(1).replace(/\.0$/, '') + 'M';
             if (num >= 1e3) return (n / 1e3).toFixed(1).replace(/\.0$/, '') + 'K';
-            return n.toString();
+            return n.toLocaleString();
+        };
+
+        // বর্তমান সময় ও তারিখ পাওয়ার ফাংশন
+        const getTime = () => {
+            const now = new Date();
+            const date = now.toLocaleDateString('en-GB'); // DD/MM/YYYY
+            const time = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+            return { date, time };
         };
 
         // ১. রিপ্লাই এর মাধ্যমে পাঠানো
@@ -47,7 +56,6 @@ module.exports = {
             return message.reply("❌ | 𝐈𝐧𝐯𝐚𝐥𝐢𝐝 𝐒𝐲𝐧𝐭𝐚𝐱!\n𝐔𝐬𝐞: !send [amount] @mention");
         }
 
-        // ভ্যালিডেশন চেক
         if (!amount || isNaN(amount) || amount <= 0) 
             return message.reply("💸 | 𝐏𝐥𝐞𝐚𝐬𝐞 𝐞𝐧𝐭𝐞𝐫 𝐚 𝐯𝐚𝐥𝐢𝐝 𝐩𝐨𝐬𝐢𝐭𝐢𝐯𝐞 𝐚𝐦𝐨𝐮𝐧𝐭!");
 
@@ -65,18 +73,33 @@ module.exports = {
             if (amount > currentMoney) 
                 return message.reply(`🚫 | 𝐈𝐧𝐬𝐮𝐟𝐟𝐢𝐜𝐢𝐞𝐧𝐭 𝐁𝐚𝐥𝐚𝐧𝐜𝐞! 𝐘𝐨𝐮 𝐡𝐚𝐯𝐞 𝐨𝐧𝐥𝐲 $${formatMoney(currentMoney)}`);
 
-            // টাকা আদান-প্রদান এবং ডাটাবেসে সেভ করা
             await usersData.set(senderID, { money: currentMoney - amount });
             await usersData.set(targetID, { money: (targetData.money || 0) + amount });
 
-            return message.reply({
-                body: `✅ 𝐓𝐫𝐚𝐧𝐬𝐚𝐜𝐭𝐢𝐨𝐧 𝐒𝐮𝐜𝐜𝐞𝐬𝐬𝐟𝐮𝐥\n━━━━━━━━━━━━━━━━━━\n👤 𝐓𝐨: ${targetData.name}\n🆔 𝐈𝐃: ${targetID}\n💰 𝐀𝐦𝐨𝐮𝐧𝐭: ${formatMoney(amount)}$\n🎊 𝐒𝐭𝐚𝐭𝐮𝐬: Completed\n━━━━━━━━━━━━━━━━━━\n✨ 𝐓𝐡𝐚𝐧𝐤 𝐲𝐨𝐮 𝐟𝐨𝐫 𝐮𝐬𝐢𝐧𝐠 𝐨𝐮𝐫 𝐬𝐞𝐫𝐯𝐢𝐜𝐞!`
-            });
+            const { date, time } = getTime();
+
+            // আপনার দেওয়া ATM স্টাইল ফরম্যাট
+            const receipt = `========================
+      TRANSACTION RECEIPT       
+========================
+DATE: ${date}
+TIME: ${time}
+------------------------------
+FROM   : ${senderData.name}
+TO     : ${targetData.name}
+ID     : ${targetID}
+AMOUNT : USD ${formatMoney(amount)}
+STATUS : SUCCESSFUL
+------------------------------
+  Thank you for using 
+========================`;
+
+            return message.reply(receipt);
 
         } catch (error) {
             console.error(error);
-            return message.reply("⚠️ | 𝐀𝐧 𝐞𝐫𝐫𝐨𝐫 𝐨𝐜𝐜𝐮𝐫𝐫𝐞𝐝! 𝐌𝐚𝐤𝐞 𝐬𝐮𝐫𝐞 𝐭𝐡𝐞 𝐮𝐬𝐞𝐫 𝐞𝐱𝐢𝐬𝐭𝐬.");
+            return message.reply("⚠️ | 𝐀𝐧 error 𝐨𝐜𝐜𝐮𝐫𝐫𝐞𝐝! 𝐌𝐚𝐤𝐞 𝐬𝐮𝐫𝐞 𝐭𝐡𝐞 𝐮𝐬𝐞𝐫 𝐞𝐱𝐢𝐬𝐭𝐬.");
         }
     }
 };
-            
+
