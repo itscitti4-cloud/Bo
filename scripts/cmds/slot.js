@@ -5,7 +5,7 @@ module.exports = {
     author: "AkHi",
     description: {
       role: 0,
-      en: "Playing slot game with custom typography and name display",
+      en: "Playing slot game",
     },
     category: "Game",
   },
