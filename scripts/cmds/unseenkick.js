@@ -4,10 +4,10 @@ module.exports = {
   config: {
     name: "unseenkick",
     aliases: ["uns", "unk"],
-    version: "1.1",
+    version: "1.2",
     author: "AkHi",
     countDown: 5,
-    role: 0, // আমরা ভেতরে ম্যানুয়ালি চেক করবো যাতে Group Admin অথবা Bot Admin যেকোনো একজন হলেই কাজ করে
+    role: 0,
     shortDescription: "List and kick inactive members",
     longDescription: "View members who haven't seen messages and kick them based on inactivity days.",
     category: "admin",
@@ -18,9 +18,8 @@ module.exports = {
     const { threadID, messageID, senderID } = event;
     const threadInfo = await threadsData.get(threadID);
     
-    // চেক করা হচ্ছে ইউজার কি গ্রুপ অ্যাডমিন নাকি বট অ্যাডমিন
     const isGroupAdmin = threadInfo.adminIDs.includes(senderID);
-    const isBotAdmin = role >= 2; // GoatBot এ সাধারণত role 2 মানে বট অ্যাডমিন
+    const isBotAdmin = role >= 2;
 
     if (!isGroupAdmin && !isBotAdmin) {
       return message.reply("❌ | You must be a Group Admin or Bot Admin to use this command.");
@@ -29,17 +28,21 @@ module.exports = {
     const now = Date.now();
     const inactiveMembers = [];
     
-    // ১. ডাটাবেজ থেকে মেম্বারদের তথ্য বিশ্লেষণ
+    // --- ফিক্স করা লুপ ---
     for (const memberID of threadInfo.members) {
-      const userData = await usersData.get(memberID);
-      const lastSeen = userData.lastSeen || 0; 
-      const diff = now - lastSeen;
-      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-
-      // বটের নিজের আইডি বাদ দেওয়া হচ্ছে
+      // বটের নিজের আইডি বাদ দেওয়া
       if (memberID == api.getCurrentUserID()) continue;
 
-      if (diff > 0) {
+      try {
+        // এখানে নিশ্চিত করা হয়েছে যেন শুধু ID স্ট্রিং হিসেবে যায়
+        const userData = await usersData.get(memberID.toString()); 
+        
+        if (!userData) continue;
+
+        const lastSeen = userData.lastSeen || 0; 
+        const diff = now - lastSeen;
+        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+
         inactiveMembers.push({
           id: memberID,
           name: userData.name || "Facebook User",
@@ -47,14 +50,16 @@ module.exports = {
           days: days,
           lastMsg: userData.lastMessage || "No message recorded"
         });
+      } catch (e) {
+        console.error("Error fetching user data for: " + memberID);
       }
     }
 
-    // ২. !unk <days> লজিক (অটো কিক)
+    // !unk <days> লজিক
     if (event.body.startsWith("!unk") && args[0]) {
       const dayLimit = parseInt(args[0]);
       if (isNaN(dayLimit) || dayLimit < 1 || dayLimit > 7) {
-        return message.reply("❌ | Please provide a day between 1 to 7. (e.g: !unk 1)");
+        return message.reply("❌ | Please provide a day between 1 to 7.");
       }
 
       const toKick = inactiveMembers.filter(m => m.days >= dayLimit);
@@ -63,18 +68,16 @@ module.exports = {
       let kickCount = 0;
       for (const user of toKick) {
         try {
-          // গ্রুপ অ্যাডমিনদের কিক দেওয়া হবে না সুরক্ষার জন্য
           if (threadInfo.adminIDs.includes(user.id)) continue;
-          
           await api.removeUserFromGroup(user.id, threadID);
           kickCount++;
-        } catch (e) { console.error(e); }
+        } catch (e) { }
       }
       return message.reply(`🧹 | Kicked ${kickCount} members who were inactive for ${dayLimit}+ days.`);
     }
 
-    // ৩. !uns লজিক (লিস্ট দেখানো)
-    inactiveMembers.sort((a, b) => a.lastSeen - b.lastSeen); // যারা অনেকদিন সিন দেয় না তারা আগে আসবে
+    // !uns লজিক
+    inactiveMembers.sort((a, b) => a.lastSeen - b.lastSeen);
     let msg = "📊 [ INACTIVE MEMBERS LIST ] 📊\n━━━━━━━━━━━━━━━━━━\n";
     
     const displayList = inactiveMembers.slice(0, 20);
@@ -113,9 +116,9 @@ module.exports = {
         await api.removeUserFromGroup(target.id, threadID);
         return message.reply(`✅ | Successfully kicked ${target.name} from the group.`);
       } catch (e) {
-        return message.reply("❌ | Failed to kick. Make sure the bot is an admin and the target is not an admin.");
+        return message.reply("❌ | Failed to kick. Make sure the bot is an admin.");
       }
     }
   }
 };
-            
+                                                       
