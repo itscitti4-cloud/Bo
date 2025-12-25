@@ -1,4 +1,4 @@
-Module.exports = {
+module.exports = {
   config: {
     name: "slot",
     version: "2.0",
