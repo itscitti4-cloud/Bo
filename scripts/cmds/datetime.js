@@ -17,20 +17,21 @@ module.exports = {
   onStart: async function ({ message }) {
     try {
       const timezone = "Asia/Dhaka";
-      // locale('en') ব্যবহার করে ইংরেজি সংখ্যা ও অক্ষর নিশ্চিত করা হলো
-      const now = moment().tz(timezone).locale('en');
+      
+      // moment-timezone এর সাথে হিজরি ফরম্যাট কাজ করানোর সঠিক নিয়ম
+      const now = moment().tz(timezone);
       
       // ১. ইংরেজি তারিখ
       const engDate = now.format("DD MMMM, YYYY");
 
-      // ২. বাংলা তারিখ (সরাসরি বাংলা মাস ও বছরে)
+      // ২. বাংলা তারিখ
       const bngDate = new Intl.DateTimeFormat('bn-BD', {
         year: 'numeric',
         month: 'long',
         day: 'numeric'
       }).format(now.toDate());
 
-      // ৩. হিজরি তারিখ (বাংলা মাসে রূপান্তর)
+      // ৩. হিজরি তারিখ ম্যাপ
       const hijriMonthsBn = {
         'Muharram': 'মুহররম', 'Safar': 'সফর', 'Rabi\' al-awwal': 'রবিউল আউয়াল',
         'Rabi\' ath-thani': 'রবিউস সানি', 'Jumada al-ula': 'জুমাদাল উলা',
@@ -39,9 +40,10 @@ module.exports = {
         'Dhu al-Hijjah': 'জিলহজ'
       };
 
-      const hijriDay = now.iDate(); // হিজরি দিন
-      const hijriMonthEn = now.format("iMMMM"); // হিজরি মাস (ইংরেজি নাম)
-      const hijriYear = now.iFullYear(); // হিজরি বছর
+      // iDate() ব্যবহারের আগে moment.locale('en') নিশ্চিত করা ভালো
+      const hijriDay = now.format("iD"); 
+      const hijriMonthEn = now.format("iMMMM");
+      const hijriYear = now.format("iYYYY");
       const hijriMonthBn = hijriMonthsBn[hijriMonthEn] || hijriMonthEn;
       
       const hijriDateFinal = `${hijriDay} ${hijriMonthBn}, ${hijriYear}`;
@@ -58,7 +60,7 @@ module.exports = {
       return message.reply(premiumReply);
 
     } catch (error) {
-      console.error("Error:", error);
+      console.error("Error Details:", error); // এখানে এরর লগ চেক করুন
       message.reply("⚠️ An error occurred while retrieving the time details.");
     }
   }
