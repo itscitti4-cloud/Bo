@@ -4,7 +4,7 @@ module.exports = {
   config: {
     name: "clock",
     aliases: ["datetime", "time"],
-    version: "9.0",
+    version: "10.0",
     author: "AkHi",
     category: "utility"
   },
@@ -39,7 +39,7 @@ module.exports = {
         return `${toBn(totalDays + 1)} ${months[mIndex]}, ${toBn(bYear)}`;
       };
 
-      // ৩. হিজরি তারিখ ক্যালকুলেশন (সঠিক ০৬ জমাদিউস সানি এর জন্য সংশোধিত)
+      // ৩. হিজরি তারিখ ক্যালকুলেশন (সংশোধিত ০৬ জমাদিউস সানি)
       const getHijriDate = (date) => {
         const d = date.getDate();
         const m = date.getMonth() + 1;
@@ -47,8 +47,8 @@ module.exports = {
 
         let jd = Math.floor(367 * y - (7 * (y + Math.floor((m + 9) / 12))) / 4 + Math.floor((275 * m) / 9) + d + 1721013.5);
         
-        // অ্যাডজাস্টমেন্ট: এখানে ১০৬৩৩ ব্যবহার করা হয়েছে যাতে তারিখ ১ দিন বেড়ে ০৬ হয়
-        let l = jd - 1948440 + 10633; 
+        // অ্যাডজাস্টমেন্ট: এখানে ১০৬৩১ ব্যবহার করা হয়েছে যাতে তারিখ ও মাস আপনার চাহিদা মতো আসে
+        let l = jd - 1948440 + 10631; 
         let n = Math.floor((l - 1) / 10631);
         l = l - 10631 * n + 354;
         let j = (Math.floor((10985 - l) / 5316)) * (Math.floor((50 * l) / 17719)) + (Math.floor(l / 5670)) * (Math.floor((43 * l) / 15238));
