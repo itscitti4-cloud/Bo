@@ -4,7 +4,7 @@ module.exports = {
   config: {
     name: "clock",
     aliases: ["datetime", "time"],
-    version: "6.0",
+    version: "7.0",
     author: "AkHi",
     category: "utility"
   },
@@ -19,7 +19,7 @@ module.exports = {
       const dayStr = now.format("dddd");
       const engDate = now.format("DD MMMM, YYYY");
 
-      // ২. বঙ্গাব্দ ক্যালকুলেশন (বৈশাখ-জ্যৈষ্ঠ মাস অনুযায়ী)
+      // ২. বঙ্গাব্দ (বৈশাখ-জ্যৈষ্ঠ) ক্যালকুলেশন
       const getBengaliDate = (date) => {
         const d = new Date(date);
         const day = d.getDate();
@@ -37,32 +37,32 @@ module.exports = {
         return `${toBn(totalDays + 1)} ${months[mIndex]}, ${toBn(bYear)}`;
       };
 
-      // ৩. হিজরী তারিখ ক্যালকুলেশন (Kuwaiti Algorithm)
+      // ৩. হিজরী তারিখ ক্যালকুলেশন (সংশোধিত)
       const getHijriDate = (date) => {
-        let d = date.getDate();
-        let m = date.getMonth() + 1;
-        let y = date.getFullYear();
-        if (m < 3) { y -= 1; m += 12; }
+        const d = date.getDate();
+        const m = date.getMonth() + 1;
+        const y = date.getFullYear();
 
-        let a = Math.floor(y / 100);
-        let b = 2 - a + Math.floor(a / 4);
-        let jd = Math.floor(365.25 * (y + 4716)) + Math.floor(30.6001 * (m + 1)) + d + b - 1524.5;
+        // জুলিয়ান ডে ক্যালকুলেশন
+        let jd = Math.floor(367 * y - (7 * (y + Math.floor((m + 9) / 12))) / 4 + Math.floor((275 * m) / 9) + d + 1721013.5);
         
-        // তারিখ অ্যাডজাস্টমেন্ট (চাঁদ দেখা অনুযায়ী +১ দিন যোগ করা হয়েছে)
-        let z = jd + 1; 
-        let l = z + 68569;
-        let n = Math.floor((4 * l) / 146097);
-        l = l - Math.floor((146097 * n + 3) / 4);
-        let i = Math.floor((4000 * (l + 1)) / 1461001);
-        l = l - Math.floor((1461 * i) / 4) + 31;
-        let j = Math.floor((80 * l) / 2447);
-        d = l - Math.floor((2447 * j) / 80);
-        l = Math.floor(j / 11);
-        m = j + 2 - 12 * l;
-        y = 100 * (n - 49) + i + l;
+        // হিজরী রূপান্তর (অ্যাডজাস্টমেন্টসহ)
+        let l = jd - 1948440 + 10632;
+        let n = Math.floor((l - 1) / 10631);
+        l = l - 10631 * n + 354;
+        let j = (Math.floor((10985 - l) / 5316)) * (Math.floor((50 * l) / 17719)) + (Math.floor(l / 5670)) * (Math.floor((43 * l) / 15238));
+        l = l - (Math.floor((30 - j) / 20)) * (Math.floor((17719 * j) / 50)) - (Math.floor(j / 21)) * (Math.floor((15238 * j) / 43)) + 29;
+        
+        let hMonth = Math.floor((24 * l) / 709);
+        let hDay = l - Math.floor((709 * hMonth) / 24);
+        let hYear = 30 * n + j - 30;
 
-        const hijriMonthsBn = ["মুহররম", "সফর", "রবিউল আউয়াল", "রবিউস সানি", "জুমাদাল উলা", "জুমাদাস সানি", "রজব", "শাবান", "রমজান", "শাওয়াল", "জিলকদ", "জিলহজ"];
-        return `${d} ${hijriMonthsBn[m - 1]}, ${y}`;
+        const hijriMonthsBn = ["মুহররম", "সফর", "রবিউল আউয়াল", "রবিউস সানি", "জুমাদাল উলা", "জমাদিউস সানি", "রজব", "শাবান", "রমজান", "শাওয়াল", "জিলকদ", "জিলহজ"];
+        
+        // সংখ্যা ২ ডিজিটের করার জন্য (০৬ জমাদিউস সানি)
+        const dayFormatted = hDay < 10 ? `0${hDay}` : hDay;
+        
+        return `${dayFormatted} ${hijriMonthsBn[hMonth - 1]}, ${hYear}`;
       };
 
       const bngDate = getBengaliDate(now.toDate());
@@ -85,4 +85,3 @@ module.exports = {
     }
   }
 };
-        
