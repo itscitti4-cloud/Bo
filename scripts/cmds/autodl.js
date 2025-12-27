@@ -7,7 +7,7 @@ module.exports = {
     name: "autodl",
     version: "1.0.0",
     author: "AkHi",
-    countDown: 5,
+    countDown: 15,
     role: 0,
     description: "Auto download video from Facebook, Insta, TikTok, YouTube, Twitter, Threads",
     category: "media",
@@ -22,22 +22,24 @@ module.exports = {
 
     // ⌛ Reaction for processing
     api.setMessageReaction("⌛", event.messageID, () => {}, true);
+    
+    // Status message
     const waitMsg = await api.sendMessage("Processing your video, please wait...", event.threadID, event.messageID);
 
     try {
-      // Updated stable API for multiple platforms
-      const res = await axios.get(`https://api.samirxpikachu.run/api/videofieri?url=${encodeURIComponent(link)}`);
+      // Using a more stable and powerful downloader API
+      const res = await axios.get(`https://api.vkrhost.in/api/download?url=${encodeURIComponent(link)}`);
       
-      // API response structure check
-      const videoUrl = res.data.videoUrl || res.data.url || res.data.result;
+      // Checking for the best possible video source in the response
+      const videoUrl = res.data.data.url || res.data.data.medias[0].url;
 
-      if (!videoUrl) throw new Error("Could not find video URL");
+      if (!videoUrl) throw new Error("Video URL not found");
 
       const filePath = path.join(__dirname, 'cache', `${Date.now()}.mp4`);
       const videoStream = await axios.get(videoUrl, { responseType: 'arraybuffer' });
       
       fs.ensureDirSync(path.join(__dirname, 'cache'));
-      fs.writeFileSync(filePath, Buffer.from(videoStream.data, 'utf-8'));
+      fs.writeFileSync(filePath, Buffer.from(videoStream.data, 'binary'));
 
       await api.sendMessage({
         body: `✅ Download Successful!\n👤 Author: AkHi`,
@@ -46,6 +48,8 @@ module.exports = {
 
       // ✅ Reaction for success
       api.setMessageReaction("✅", event.messageID, () => {}, true);
+      
+      // Cleanup
       fs.unlinkSync(filePath);
       api.unsendMessage(waitMsg.messageID);
 
@@ -53,12 +57,18 @@ module.exports = {
       // ❌ Reaction for failure
       api.setMessageReaction("❌", event.messageID, () => {}, true);
       api.sendMessage("Sorry, the video could not be downloaded. The link might be private or the server is busy.", event.threadID, event.messageID);
+      api.unsendMessage(waitMsg.messageID);
     }
   },
 
   onChat: async function ({ api, event }) {
-    if (event.body && (event.body.includes("facebook.com") || event.body.includes("fb.watch") || event.body.includes("tiktok.com") || event.body.includes("instagram.com") || event.body.includes("youtube.com") || event.body.includes("youtu.be") || event.body.includes("threads.net"))) {
-      this.onStart({ api, event, args: [event.body] });
+    if (!event.body) return;
+    
+    const regex = /(https?:\/\/(?:www\.)?(facebook|fb|instagram|tiktok|youtube|youtu|twitter|x|threads)\.com\/\S+|https?:\/\/fb\.watch\/\S+)/ig;
+    const match = event.body.match(regex);
+
+    if (match) {
+      this.onStart({ api, event, args: [match[0]] });
     }
   }
 };
