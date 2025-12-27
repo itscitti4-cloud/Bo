@@ -1,81 +1,57 @@
-const axios = require("axios");
-const fs = require("fs-extra");
-const path = require("path");
+const axios = require('axios');
+const fs = require('fs-extra');
+const path = require('path');
 
 module.exports = {
   config: {
     name: "autodl",
-    version: "1.0.5",
+    version: "1.0.0",
     author: "AkHi",
     countDown: 5,
     role: 0,
+    description: "Auto download video from Facebook, Insta, TikTok, YouTube, Twitter, Threads",
     category: "media",
-    shortDescription: {
-      en: "Auto download video from links"
-    },
-    longDescription: {
-      en: "Automatically downloads videos from Facebook, TikTok, Instagram when a link is sent."
-    },
     guide: {
-      en: "Just send the link in group/inbox"
+      en: "{p}autodl [link]"
     }
   },
 
-  // Goatbot-এ ইভেন্ট হ্যান্ডেল করার জন্য 'onChat' ব্যবহার করা বেশি কার্যকর
+  onStart: async function ({ api, event, args }) {
+    const link = args[0];
+    if (!link) return api.sendMessage("Please provide a video link.", event.threadID, event.messageID);
+
+    api.sendMessage("Processing your video, please wait...", event.threadID, event.messageID);
+
+    try {
+      // Using a public multi-downloader API
+      const res = await axios.get(`https://api.diegoveteran.repl.co/api/download/all?url=${encodeURIComponent(link)}`);
+      const videoUrl = res.data.result.video || res.data.result.url;
+      
+      const filePath = path.join(__dirname, 'cache', `${Date.now()}.mp4`);
+      const videoStream = await axios.get(videoUrl, { responseType: 'arraybuffer' });
+      
+      fs.writeFileSync(filePath, Buffer.from(videoStream.data, 'utf-8'));
+
+      api.sendMessage({
+        body: `✅ Download Successful!\n👤 Author: AkHi`,
+        attachment: fs.createReadStream(filePath)
+      }, event.threadID, () => fs.unlinkSync(filePath), event.messageID);
+
+    } catch (err) {
+      api.sendMessage("Sorry, the video could not be downloaded. Please check if the link is valid.", event.threadID, event.messageID);
+    }
+  },
+
+  // Auto-link detection feature
   onChat: async function ({ api, event }) {
-    const { threadID, messageID, body } = event;
-    if (!body) return;
+    const message = event.body;
+    if (!message) return;
 
-    const urlRegex = /(https?:\/\/[^\s]+)/g;
-    const links = body.match(urlRegex);
+    const regex = /(https?:\/\/(?:www\.)?(facebook|fb|instagram|tiktok|youtube|youtu|twitter|x|threads)\.com\/\S+)/ig;
+    const match = message.match(regex);
 
-    if (!links) return;
-
-    const videoLink = links[0];
-    const supportedSites = ["tiktok.com", "facebook.com", "fb.watch", "instagram.com", "reels"];
-    
-    if (supportedSites.some(site => videoLink.includes(site))) {
-      try {
-        // ১. শুরুতে ⌛ রিঅ্যাক্ট
-        await api.setMessageReaction("⌛", messageID, () => {}, true);
-
-        // ২. এপিআই কল (Samir API আপডেট ফরম্যাট)
-        const res = await axios.get(`https://api.samir.ltd/download/alldl?url=${encodeURIComponent(videoLink)}`);
-        
-        // এপিআই রেসপন্স চেক
-        let videoUrl = res.data.result.url || res.data.result;
-        if (!videoUrl) throw new Error("Video URL not found");
-
-        // ৩. ফাইল সেভ করার লোকেশন
-        const cacheDir = path.join(__dirname, "cache");
-        if (!fs.existsSync(cacheDir)) fs.mkdirSync(cacheDir);
-        
-        const videoPath = path.join(cacheDir, `${Date.now()}.mp4`);
-        const videoData = (await axios.get(videoUrl, { responseType: 'arraybuffer' })).data;
-        fs.writeFileSync(videoPath, Buffer.from(videoData, 'utf-8'));
-
-        // ৪. ভিডিও সেন্ড করা
-        await api.sendMessage({
-          body: "AkHi Ma'am, Video downloaded successfully ✅",
-          attachment: fs.createReadStream(videoPath)
-        }, threadID, async (err) => {
-          if (!err) {
-            await api.setMessageReaction("✅", messageID, () => {}, true);
-          } else {
-            await api.setMessageReaction("❌", messageID, () => {}, true);
-          }
-          if (fs.existsSync(videoPath)) fs.unlinkSync(videoPath);
-        });
-
-      } catch (error) {
-        console.error("Error in autodl:", error.message);
-        await api.setMessageReaction("❌", messageID, () => {}, true);
-      }
+    if (match) {
+      this.onStart({ api, event, args: [match[0]] });
     }
-  },
-
-  onStart: async function ({ api, event }) {
-    return api.sendMessage("এটি একটি অটো ডাউনলোডার। যেকোনো ভিডিও লিঙ্ক দিন, আমি ডাউনলোড করে দেব।", event.threadID, event.messageID);
   }
 };
-            
