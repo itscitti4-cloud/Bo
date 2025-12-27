@@ -17,41 +17,48 @@ module.exports = {
   },
 
   onStart: async function ({ api, event, args }) {
-    const link = args[0];
-    if (!link) return api.sendMessage("Please provide a video link.", event.threadID, event.messageID);
+    const link = args[0] || event.body;
+    if (!link || !link.startsWith("http")) return;
 
-    api.sendMessage("Processing your video, please wait...", event.threadID, event.messageID);
+    // ⌛ Reaction for processing
+    api.setMessageReaction("⌛", event.messageID, () => {}, true);
+    const waitMsg = await api.sendMessage("Processing your video, please wait...", event.threadID, event.messageID);
 
     try {
-      // Using a public multi-downloader API
-      const res = await axios.get(`https://api.diegoveteran.repl.co/api/download/all?url=${encodeURIComponent(link)}`);
-      const videoUrl = res.data.result.video || res.data.result.url;
+      // Updated stable API for multiple platforms
+      const res = await axios.get(`https://api.samirxpikachu.run/api/videofieri?url=${encodeURIComponent(link)}`);
       
+      // API response structure check
+      const videoUrl = res.data.videoUrl || res.data.url || res.data.result;
+
+      if (!videoUrl) throw new Error("Could not find video URL");
+
       const filePath = path.join(__dirname, 'cache', `${Date.now()}.mp4`);
       const videoStream = await axios.get(videoUrl, { responseType: 'arraybuffer' });
       
+      fs.ensureDirSync(path.join(__dirname, 'cache'));
       fs.writeFileSync(filePath, Buffer.from(videoStream.data, 'utf-8'));
 
-      api.sendMessage({
+      await api.sendMessage({
         body: `✅ Download Successful!\n👤 Author: AkHi`,
         attachment: fs.createReadStream(filePath)
-      }, event.threadID, () => fs.unlinkSync(filePath), event.messageID);
+      }, event.threadID);
+
+      // ✅ Reaction for success
+      api.setMessageReaction("✅", event.messageID, () => {}, true);
+      fs.unlinkSync(filePath);
+      api.unsendMessage(waitMsg.messageID);
 
     } catch (err) {
-      api.sendMessage("Sorry, the video could not be downloaded. Please check if the link is valid.", event.threadID, event.messageID);
+      // ❌ Reaction for failure
+      api.setMessageReaction("❌", event.messageID, () => {}, true);
+      api.sendMessage("Sorry, the video could not be downloaded. The link might be private or the server is busy.", event.threadID, event.messageID);
     }
   },
 
-  // Auto-link detection feature
   onChat: async function ({ api, event }) {
-    const message = event.body;
-    if (!message) return;
-
-    const regex = /(https?:\/\/(?:www\.)?(facebook|fb|instagram|tiktok|youtube|youtu|twitter|x|threads)\.com\/\S+)/ig;
-    const match = message.match(regex);
-
-    if (match) {
-      this.onStart({ api, event, args: [match[0]] });
+    if (event.body && (event.body.includes("facebook.com") || event.body.includes("fb.watch") || event.body.includes("tiktok.com") || event.body.includes("instagram.com") || event.body.includes("youtube.com") || event.body.includes("youtu.be") || event.body.includes("threads.net"))) {
+      this.onStart({ api, event, args: [event.body] });
     }
   }
 };
